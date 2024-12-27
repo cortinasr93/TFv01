@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Detection Dashboard</title>
+    
+    <!-- React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Recharts -->
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.js"></script>
+    <script src="https://unpkg.com/recharts@2.15.0/umd/Recharts.js"></script>
+    
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <!-- Lucide icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Prevent Jinja from interpreting JSX by wrapping the entire React app in a script tag
+        {% raw %}
+        const { useState, useEffect } = React;
+        const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } = window.Recharts;
+
+        function Loading() {
+            return (
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-lg">Loading dashboard...</div>
+                </div>
+            );
+        }
+
+        function Error({ message }) {
+            return (
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-lg text-red-600">{message}</div>
+                </div>
+            );
+        }
+        
+        function Dashboard() {
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            const [data, setData] = useState({
+                timeSeriesData: [],
+                botTypes: [],
+                stats: {
+                    totalRequests: 0,
+                    botPercentage: 0,
+                    activeThreats: 0,
+                    uniqueIPs: 0
+                },
+                recentDetections: []
+            });
+
+            const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+            useEffect(() => {
+                const fetchData = async () => {
+                    try {
+                        setLoading(true);
+                        const response = await fetch('/api/v1/dashboard/test_publisher');
+                        if (!response.ok) {
+                            throw new Error(`HTTP error. Status: ${response.status}`);
+                        }
+                        const result = await response.json();
+                        setData(result);
+                        setError(null);
+                    } catch (error) {
+                        console.error('Error fetching dashboard data:', error);
+                        setError('Failed to load dashboard data. Please try again later.')
+                    } finally {
+                        setLoading(false)
+                    }
+                };
+
+                fetchData();
+                const interval = setInterval(fetchData, 30000);
+                return () => clearInterval(interval);
+            }, []);
+
+            useEffect(() => {
+                window.lucide.createIcons();
+            }, [data]);
+            
+            if (loading) return <Loading />;
+            if (error) return <Error message={error} />;
+
+            return (
+                <div className="p-6 max-w-7xl mx-auto">
+                    <h1 className="text-3xl font-bold mb-6">Bot Detection Dashboard</h1>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <div className="flex items-center">
+                                <div className="mr-4">
+                                    <i data-lucide="users" className="h-8 w-8 text-blue-500"></i>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold">Total Requests</h3>
+                                    <p className="text-2xl">{data.stats.totalRequests}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <div className="flex items-center">
+                                <div className="mr-4">
+                                    <i data-lucide="bot" className="h-8 w-8 text-yellow-500"></i>                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold">Bot Percentage</h3>
+                                    <p className="text-2xl">{data.stats.botPercentage}%</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <div className="flex items-center">
+                                <div className="mr-4">
+                                    <i data-lucide="alert-triangle" className="h-8 w-8 text-red-500"></i>                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold">Active Threats</h3>
+                                    <p className="text-2xl">{data.stats.activeThreats}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <div className="flex items-center">
+                                <div className="mr-4">
+                                    <i data-lucide="activity" className="h-8 w-8 text-grey-500"></i>                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold">Unique IPs</h3>
+                                    <p className="text-2xl">{data.stats.uniqueIPs}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <h3 className="text-lg font-semibold mb-4">Traffic Over Time</h3>
+                            <div style={{width: '100%', height: 300}}>
+                                <ResponsiveContainer>
+                                    <LineChart data={data.timeSeriesData}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="time" />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Line type="monotone" dataKey="total" stroke="#8884d8" name="Total Traffic" />
+                                        <Line type="monotone" dataKey="bots" stroke="#82ca9d" name="Bot Traffic" />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <h3 className="text-lg font-semibold mb-4">Bot Types Distribution</h3>
+                            <div style={{width: '100%', height: 300}}>
+                                <ResponsiveContainer>
+                                    <PieChart>
+                                        <Pie
+                                            data={data.botTypes}
+                                            dataKey="value"
+                                            nameKey="name"
+                                            cx="50%"
+                                            cy="50%"
+                                            outerRadius={80}
+                                            label
+                                        >
+                                            {data.botTypes.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-lg shadow">
+                        <h3 className="text-lg font-semibold mb-4">Recent Bot Detections</h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="border-b">
+                                        <th className="text-left p-2">Time</th>
+                                        <th className="text-left p-2">IP Address</th>
+                                        <th className="text-left p-2">Bot Type</th>
+                                        <th className="text-left p-2">Confidence</th>
+                                        <th className="text-left p-2">Detection Method</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.recentDetections.map((detection, index) => (
+                                        <tr key={index} className="border-b">
+                                            <td className="p-2">{detection.time}</td>
+                                            <td className="p-2">{detection.ipAddress}</td>
+                                            <td className="p-2">{detection.botType}</td>
+                                            <td className="p-2">{detection.confidence}%</td>
+                                            <td className="p-2">{detection.detectionMethod}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Dashboard />);
+        {% endraw %}
+    </script>
+
+</body>
+</html>
