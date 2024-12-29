@@ -1,9 +1,11 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, Depends
+from sqlalchemy.orm import Session
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from core.database import engine
-from core.models import detection, publisher
+from api.onboarding.services import OnboardingService
+from core.database import engine, get_db
+from core.models import detection, publisher, Base
 from api.detection import router as detection_router
 from api.dashboard import router as dashboard_router
 #from api.payments import router as payments_router
@@ -37,6 +39,7 @@ templates = Jinja2Templates(directory="templates")
 # Create database tables
 detection.Base.metadata.create_all(bind=engine)
 publisher.Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 # Include routers
 app.include_router(detection_router)
@@ -58,6 +61,44 @@ async def get_dashboard(request: Request):
         "dashboard/index.html",
         {"request": request}
     )
+
+@app.get("/register")
+async def get_registration_page(request: Request):
+    return templates.TemplateResponse(
+        "registration/index.html",
+        {"request": request}
+    )
+
+@app.get("/register/publisher")
+async def get_publisher_registration(request: Request):
+    return templates.TemplateResponse(
+        "registration/publisher.html",
+        {"request": request}
+    )
+
+@app.post("/api/v1/onboarding/publisher")
+async def register_publisher(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    try:
+        data = await request.json()
+        onboarding_service = OnboardingService(db)
+        result = await onboarding_service.register_publisher(
+            name=data.get("name"),
+            email=data.get("email"),
+            password=data.get("password"),
+            website=data.get("website"),
+            content_type=data.get("contentType")
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error in publisher registration: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Registration failed"
+        )
+
 
 if __name__ == "__main__":
     import uvicorn

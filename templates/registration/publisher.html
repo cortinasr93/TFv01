@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Publisher Registration</title>
+    <!-- Simple Tailwind for styling (optional but recommended for a professional look) -->
+    <link 
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" 
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-50">
+    <!-- The root element where React will render our app -->
+    <div id="root" class="p-6 max-w-3xl mx-auto"></div>
+
+    <!-- Load React and ReactDOM from the CDN (Production versions) -->
+    <script 
+      src="https://unpkg.com/react@18.2.0/umd/react.production.min.js" 
+      crossorigin>
+    </script>
+    <script 
+      src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js" 
+      crossorigin>
+    </script>
+
+    <!-- Babel Standalone - so we can load .jsx in the browser (dev/demo use) -->
+    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+
+    <!-- Our React component code (multi-step form) -->
+    <script type="text/babel" src="../static/components/registration/PublisherRegistration.jsx"></script>
+
+    <!-- Render the component into #root -->
+    <script type="text/babel">
+      const rootElement = document.getElementById('root');
+      ReactDOM.render(<PublisherRegistration />, rootElement);
+    </script>
+  </body>
+</html>

@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, DateTime, Boolean, Float, UUID
+from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime
 import uuid
@@ -17,6 +18,9 @@ class Publisher(Base):
     settings = Column(JSONB, default={})
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    stripe_account = relationship("PublisherStripeAccoount", back_populates="publisher", uselist=False)
     
     def __repr__(self):
         return f"<Publisher(name={self.name}, email={self.email})>"

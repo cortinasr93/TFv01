@@ -2,7 +2,10 @@ from pydantic_settings import BaseSettings
 from pydantic import ConfigDict
 from functools import lru_cache
 from typing import Optional
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
 
 class Settings(BaseSettings):
     model_config = ConfigDict(
@@ -24,8 +27,10 @@ class Settings(BaseSettings):
     REDIS_DB: int = 0
     
     # Payment-related settings
-    STRIPE_SECRET_KEY: Optional[str] = None
+    STRIPE_SECRET_KEY: Optional[str] = os.getenv("STRIPE_SECRET_KEY")
+    STRIPE_PUBLISHABLE_KEY: Optional[str] = None
     STRIPE_WEBHOOK_SECRET: Optional[str] = None
+    PLATFORM_FEE_PERCENTAGE: Optional[int] = 3
     PAYOUT_THRESHOLD: float = 100.0
     MIN_PAYOUT_AMOUNT: float = 20.0
     
