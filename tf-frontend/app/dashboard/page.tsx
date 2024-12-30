@@ -82,7 +82,7 @@ export default function Dashboard() {
         setLoading(true);
         console.log('Starting dashboard data fetch');
 
-        const response = await fetch('/api/dashboard');
+        const response = await fetch('/api/dashboard/test_publisher');
         console.log('Response received:', response.status);
 
         if (!response.ok) {

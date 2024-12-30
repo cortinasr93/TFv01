@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from .services import BotDetectorService
 import logging
 
-router = APIRouter(prefix="/api/v1/detection", tags=["detection"])
+router = APIRouter(prefix="/api/detection", tags=["detection"])
 logger = logging.getLogger(__name__)
 
 class DetectionRequest(BaseModel):
