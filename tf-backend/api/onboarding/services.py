@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from typing import Dict, Optional
 from datetime import datetime
 from core.models.payment import PublisherStripeAccount, AICompanyPaymentAccount
+from core.security import hash_password
 from core.models.publisher import Publisher
 from core.models.aicompany import AICompany
 from core.config import get_settings
@@ -21,6 +22,7 @@ class OnboardingService:
         self,
         name: str,
         email: str,
+        password: str,
         website: str,
         content_type: str
     ) -> Dict:
@@ -33,14 +35,17 @@ class OnboardingService:
             if existing_publisher:
                 raise HTTPException(status_code=400, detail="Email already registered.")
             
+            hashed_password = hash_password(password)
+            
             # Create publisher record
             publisher = Publisher(
                 name=name,
                 email=email,
                 website=website,
-                content_type=content_type
-                # ADD PASSWORD HASING LOGIC HERE
+                content_type=content_type,
+                hashed_password=hashed_password,
             )
+            
             self.db.add(publisher)
             self.db.flush()
             
@@ -80,7 +85,7 @@ class OnboardingService:
                 "onboarding_url": account_link.url
             }
         
-        except stripe.StripeError.error as e:
+        except stripe.error.StripeError as e:
             self.db.rollback()
             logger.error(f"Stripe error during publisher registration: {e}")
             raise HTTPException(status_code=400, detail=str(e))
@@ -94,25 +99,34 @@ class OnboardingService:
         company_name: str,
         email: str,
         password: str,
-        website: str
+        website: str,
+        billing_email: Optional[str] = None
     ) -> Dict:
         """
         Register a new AI company and set up Stripe customer
         """
         try:
+            logger.info(f"Starting AI company registration for {company_name}")
+            
+            # Check for existing company
             existing_company = self.db.query(AICompany).filter_by(email=email).first()
             if existing_company:
                 raise HTTPException(status_code=400, detail="Email already registered")
+            
+            # Hash password
+            hashed_password = hash_password(password)
 
             # Create company record
             company = AICompany(
                 name=company_name,
                 email=email,
-                website=website
-                # Add password hashing logic here
+                website=website,
+                hashed_password=hashed_password
             )
+            
             self.db.add(company)
             self.db.flush()
+            logger.info(f"Created AI company record with ID: {company.id}")
             
             # Create stripe customer
             stripe_customer = stripe.Customer.create(
@@ -127,17 +141,18 @@ class OnboardingService:
             company_payment = AICompanyPaymentAccount(
                 company_id=company.id,
                 stripe_customer_id=stripe_customer.id,
-                billing_email=email
+                billing_email=billing_email or email
             )
             self.db.add(company_payment)
             self.db.commit()
+            logger.info(f"Successfully completed registration for {company_name}")
 
             return {
-                "company_id": company.id,
+                "company_id": str(company.id),
                 "setup_complete": True
             }
         
-        except stripe.StripeError.error as e:
+        except stripe.error.StripeError as e:
             self.db.rollback()
             logger.error(f"Stripe error during company registration: {e}")
             raise HTTPException(status_code=400, detail=str(e))

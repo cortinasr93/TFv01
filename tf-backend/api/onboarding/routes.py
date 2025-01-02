@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from core.database import get_db
 from .services import OnboardingService
 from pydantic import BaseModel, EmailStr, HttpUrl
-from typing import Optional
+from typing import Optional, Dict
 
-router = APIRouter(prefix="/api/v1/onboarding", tags=["onboarding"])
+router = APIRouter(prefix="/api/onboarding", tags=["onboarding"])
 
 class PublisherRegistration(BaseModel):
     name: str
@@ -13,6 +13,7 @@ class PublisherRegistration(BaseModel):
     password: str
     website: HttpUrl
     content_type: str
+    settings: Optional[Dict] = None
 
 class AICompanyRegistration(BaseModel):
     company_name: str

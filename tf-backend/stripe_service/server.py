@@ -87,7 +87,7 @@ class StripeService:
                 "client_secret": payment_intent.client_secret
             }
         
-        except stripe.StripeError.error as e:
+        except stripe.error.StripeError as e:
             logger.error(f"Stripe error processing payment: {e}")
             raise
         except Exception as e:

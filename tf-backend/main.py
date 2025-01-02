@@ -8,6 +8,7 @@ from core.database import engine, get_db
 from core.models import detection, publisher, Base
 from api.detection import router as detection_router
 from api.dashboard import router as dashboard_router
+from api.onboarding import router as onboarding_router
 #from api.payments import router as payments_router
 import logging
 
@@ -38,6 +39,7 @@ Base.metadata.create_all(bind=engine)
 # Include routers
 app.include_router(detection_router)
 app.include_router(dashboard_router)
+app.include_router(onboarding_router)
 
 # Root endpoint
 @app.get("/")

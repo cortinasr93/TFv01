@@ -12,7 +12,11 @@ class Settings(BaseSettings):
         case_sensitive = True,
         env_file = ".env"
     )
-        
+    
+    # Base URL
+    BASE_URL: str = "http://localhost:3000"
+
+
     # PostgreSQL settings
     POSTGRES_USER: str = "trainfair_app"
     POSTGRES_PASSWORD: str = "password123"
