@@ -1,34 +1,94 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from fastapi import HTTPException
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List
+import logging
 import json
 from core.models.detection import RequestLog
+from core.models.publisher import Publisher
+from core.models.aicompany import AICompany
+
+logger = logging.getLogger(__name__)
 
 class DashboardService:
     def __init__(self, db: Session):
         self.db = db
         
-    async def get_dashboard_data(self, publisher_id: str) -> Dict:
+    async def get_publisher_dashboard(self, publisher_id: str) -> Dict:
         """
         Get all dashboard data for a publisher
         """
-        now = datetime.now(timezone.utc)
-        last_24h = now - timedelta(hours=24)
-        last_hour = now - timedelta(hours=1)
+        try:
+            now = datetime.now(timezone.utc)
+            last_24h = now - timedelta(hours=24)
+            last_hour = now - timedelta(hours=1)
         
-        # Get all components of the dashboard
-        stats = await self.get_publisher_stats(publisher_id)
-        time_series = await self.get_time_series_data(publisher_id)
-        bot_types = await self.get_bot_type_distribution(publisher_id)
-        recent_detections = await self.get_recent_detections(publisher_id)
+            # Get all components of the dashboard
+            stats = await self.get_publisher_stats(publisher_id)
+            time_series = await self.get_time_series_data(publisher_id)
+            bot_types = await self.get_bot_type_distribution(publisher_id)
+            recent_detections = await self.get_recent_detections(publisher_id)
         
-        return {
-            "stats": stats,
-            "timeSeriesData": time_series,
-            "botTypes": bot_types,
-            "recentDetections": recent_detections
-        }
+            return {
+                "stats": stats,
+                "timeSeriesData": time_series,
+                "botTypes": bot_types,
+                "recentDetections": recent_detections
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting publisher dashboard: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail="Error retrieving dashboard data"
+            )
+    
+    async def get_ai_company_dashboard(self, company_id: str) -> Dict:
+        """ 
+        Get AI company-specific dashboard data
+        """
+        try:
+            return {
+                "usage_stats": await self.get_api_usage_stats(company_id),
+                "billing": await self.get_billing_summary(company_id),
+                "recent_transactions": await self.get_recent_transactions(company_id),
+                "data_sources": await self.get_data_source_stats(company_id)
+            }
+        except Exception as e:
+            logger.error(f"Error getting AI company dashboard: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail="Error retrieving dashboard data"
+            )
+    async def get_user_profile(self, user_id: str, user_type: str) -> Dict:
+        """ 
+        Get user profile data
+        """
+        try:
+            if user_type == "publisher":
+                user = self.db.query(Publisher).filter_by(id=user_id).first()
+            else:
+                user = self.db.query(AICompany).filter_by(id=user_id).first()
+                
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+            
+            return {
+                "id": str(user.id),
+                "name": user.name,
+                "email": user.email,
+                "created_at": user.created_at,
+                "settings": user.settings if hasattr(user, 'settings') else {}
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error getting user profile: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail="Error retrieving user profile"
+            )
     
     async def get_publisher_stats(self, publisher_id: str) -> Dict:
         """

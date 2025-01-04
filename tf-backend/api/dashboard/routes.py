@@ -2,11 +2,50 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import Dict
 from core.database import get_db
+from core.middleware import require_ai_company, require_publisher, get_session
 from .services import DashboardService
 import logging
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 logger = logging.getLogger(__name__)
+
+# Publisher-specific dashboard
+@router.get("/publisher")
+async def get_publisher_dashboard(
+    session: dict = Depends(require_publisher),
+    db: Session = Depends(get_db)
+):
+    """ 
+    Get publisher dashboard data
+    """
+    dashboard_service = DashboardService(db)
+    return await dashboard_service.get_publisher_dashboard(session["user_id"])
+
+# AI Company-specific dashboard
+@router.get("/ai-company")
+async def get_ai_company_dashboard(
+    session: dict = Depends(require_ai_company),
+    db: Session = Depends(get_db)
+):
+    """
+    Get AI company dashboard data
+    """
+    dashboard_service = DashboardService(db)
+    return await dashboard_service.get_ai_company_dashboard(session["user_id"])
+
+@router.get("/profile")
+async def get_user_profile(
+    session: dict = Depends(get_session),
+    db: Session = Depends(get_db)
+):
+    """ 
+    Get user profile data
+    """
+    dashboard_service = DashboardService(db)
+    return await dashboard_service.get_user_profile(
+        user_id=session["user_id"],
+        user_type=session["user_type"]
+    )
 
 @router.get("/stats/{publisher_id}")
 async def get_publisher_stats(publisher_id: str, db: Session = Depends(get_db)) -> Dict:
@@ -104,7 +143,11 @@ async def get_recent_detections(publisher_id: str, db: Session = Depends(get_db)
         )
 
 @router.get("/{publisher_id}")
-async def get_dashboard_data(publisher_id: str, db: Session = Depends(get_db)) -> Dict:
+async def get_dashboard_data(
+    publisher_id: str, 
+    session: dict = Depends(require_publisher), 
+    db: Session = Depends(get_db)
+) -> Dict:
     """
     Fetch all dashboard data for a publisher
 
@@ -120,11 +163,16 @@ async def get_dashboard_data(publisher_id: str, db: Session = Depends(get_db)) -
         HTTPException if there's an error retrieving the data.
     """
     try:
+        if str(session["user_id"]) != publisher_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Not authorized to view this dashboard"
+            )
         # Create dashboard service instance
         dashboard_service = DashboardService(db)
         
         # Get dashboard data using service
-        dashboard_data = await dashboard_service.get_dashboard_data(publisher_id)
+        dashboard_data = await dashboard_service.get_publisher_dashboard(publisher_id)
         
         return dashboard_data
     

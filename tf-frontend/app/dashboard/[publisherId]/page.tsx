@@ -59,7 +59,10 @@ function ErrorMessage({ message }: ErrorProps) {
   );
 }
 
-export default function Dashboard() {
+import { use } from 'react';
+
+export default function Dashboard({ params }: { params: Promise<{ publisherId: string }> }) {
+  const resolvedParams = use(params);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<DashboardData>({
@@ -82,7 +85,9 @@ export default function Dashboard() {
         setLoading(true);
         console.log('Starting dashboard data fetch');
 
-        const response = await fetch('/api/dashboard/test_publisher');
+        const response = await fetch(`/api/dashboard/${resolvedParams.publisherId}`, {
+          credentials: 'include'
+        });
         console.log('Response received:', response.status);
 
         if (!response.ok) {
@@ -90,6 +95,7 @@ export default function Dashboard() {
             console.error('Error data:', errorData);
             throw new Error(errorData.details || errorData.error || `HTTP error! status: ${response.status}`);
         }
+
         const result = await response.json();
         console.log('Data successfully fetched');
         setData(result as DashboardData);
@@ -109,10 +115,11 @@ export default function Dashboard() {
     fetchData();
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [resolvedParams.publisherId]);
 
   if (loading) return <Loading />;
   if (error) return <ErrorMessage message={error as string} />;
+  if (!data) return <ErrorMessage message="No data available" />;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">

@@ -1,17 +1,19 @@
 // app/api/register/ai-company/route.ts
 import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const body = await req.json();
+    const body = await request.json();
     
     // Log the incoming request data
     console.log('Registration request received:', body);
 
     const response = await fetch('http://localhost:8000/api/onboarding/ai-company', {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
+        'Cookie': request.headers.get('cookie') || ''
       },
       body: JSON.stringify({
         company_name: body.companyName,

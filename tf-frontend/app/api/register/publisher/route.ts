@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
     try {
-        const body = await req.json();
+        const body = await request.json();
         console.log('Publisher registration request received:', body);
 
         const registrationData = {
@@ -23,7 +23,11 @@ export async function POST(req: Request) {
 
         const response = await fetch('http://localhost:8000/api/onboarding/publisher', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': request.headers.get('cookie') || ''
+            },
             body: JSON.stringify(registrationData)
         })
         

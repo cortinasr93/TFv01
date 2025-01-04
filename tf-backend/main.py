@@ -9,12 +9,13 @@ from core.models import detection, publisher, Base
 from api.detection import router as detection_router
 from api.dashboard import router as dashboard_router
 from api.onboarding import router as onboarding_router
+from api.auth import router as auth_router
 #from api.payments import router as payments_router
 import logging
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -40,6 +41,7 @@ Base.metadata.create_all(bind=engine)
 app.include_router(detection_router)
 app.include_router(dashboard_router)
 app.include_router(onboarding_router)
+app.include_router(auth_router)
 
 # Root endpoint
 @app.get("/")
