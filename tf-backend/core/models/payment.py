@@ -1,6 +1,8 @@
-from sqlalchemy import Column, String, Boolean, Float, DateTime, ForeignKey, UUID, Text
+from sqlalchemy import Column, String, Boolean, Float, DateTime, ForeignKey, UUID, Text, Enum, Integer
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime
+import enum
 import uuid
 from core.database import Base
 
@@ -46,6 +48,15 @@ class AICompanyPaymentAccount(Base):
     def __repr__(self):
         return f"<AICompanyPaymentAccount(company_id={self.company_id}, customer_id={self.stripe_customer_id})>"
 
+class UsageType(enum.Enum):
+    TRAINING = "training"
+    RAG = "rag"
+    
+class UsageStatus(enum.Enum):
+    PENDING = "pending"
+    PROCESSED = "processed"
+    FAILED = "failed"
+
 class UsageRecord(Base):
     """Tracks usage and billing records"""
     __tablename__ = "usage_records"
@@ -53,21 +64,34 @@ class UsageRecord(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey('ai_company_payment_accounts.id'), nullable=False)
     publisher_id = Column(UUID(as_uuid=True), ForeignKey('publisher_stripe_accounts.id'), nullable=False)
-    usage_type = Column(String, nullable=False)  # 'training', 'rag', etc.
-    amount = Column(Float, nullable=False)
-    platform_fee = Column(Float, nullable=False)
-    publisher_amount = Column(Float, nullable=False)
-    status = Column(String, nullable=False)  # 'pending', 'processed', 'failed'
+    
+    # Usage details
+    usage_type = Column(Enum(UsageType), nullable=False)  # 'training' or 'rag'
+    num_tokens = Column(Integer, nullable=False, comment="Number of tokens used")
+    token_rate = Column(Float, nullable=False, comment="Rate per token in USD")
+    
+    # Financial Details
+    raw_amount = Column(Float, nullable=False, comment="Total amount before fees (tokens * rate)")
+    platform_fee = Column(Float, nullable=False, comment = "Platform fee amount")
+    publisher_amount = Column(Float, nullable=False, comment="Amount to be paid out to publisher")
+    total_cost = Column(Float, nullable=False, comment="Total cost to AI company")
+    
+    # Status and Processing
+    status = Column(Enum(UsageStatus), nullable=False, default="UsageStatus.PENDING")  # 'pending', 'processed', 'failed'
     processed_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    error_details = Column(JSONB, nullable=True)
+    
+    # Metadata
+    usage_metadata = Column(JSONB, nullable=True, comment="Additional usage metadata")
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     # Relationships
     company_account = relationship("AICompanyPaymentAccount", back_populates="usage_records")
     publisher_account = relationship("PublisherStripeAccount", back_populates="usage_records")
 
     def __repr__(self):
-        return f"<UsageRecord(company_id={self.company_id}, amount=${self.amount:.2f}, status={self.status})>"
+        return f"<UsageRecord(id={self.id}, company_id={self.company_id}, tokens={self.num_tokens}, cost=${self.total_cost:.2f})>"
 
 class PaymentTransaction(Base):
     """Records all payment transactions"""

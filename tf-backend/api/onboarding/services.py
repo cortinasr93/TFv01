@@ -6,6 +6,7 @@ from core.models.payment import PublisherStripeAccount, AICompanyPaymentAccount
 from core.security import hash_password
 from core.models.publisher import Publisher
 from core.models.aicompany import AICompany
+from core.session import SessionManager
 from core.config import get_settings
 import stripe
 import logging
@@ -17,6 +18,7 @@ class OnboardingService:
     def __init__(self, db: Session):
         self.db = db
         stripe.api_key = settings.STRIPE_SECRET_KEY
+        self.session_manager = SessionManager()
     
     async def register_publisher(
         self,
@@ -48,6 +50,14 @@ class OnboardingService:
             
             self.db.add(publisher)
             self.db.flush()
+            
+            # Create session for new publisher
+            session_id = self.session_manager.create_session({
+                "id": str(publisher.id),
+                "email": publisher.email,
+                "name": publisher.name,
+                "user_type": "publisher"
+            })
             
             stripe_account = stripe.Account.create(
                 type="express",
@@ -81,8 +91,10 @@ class OnboardingService:
             self.db.commit()
 
             return {
-                "publisher_id": publisher.id,
-                "onboarding_url": account_link.url
+                "publisher_id": str(publisher.id),
+                "session_id": session_id,
+                "onboarding_url": account_link.url,
+                "user_type": "publisher"
             }
         
         except stripe.error.StripeError as e:

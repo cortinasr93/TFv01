@@ -10,28 +10,57 @@ router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 logger = logging.getLogger(__name__)
 
 # Publisher-specific dashboard
-@router.get("/publisher")
+@router.get("/publisher/{publisher_id}")
 async def get_publisher_dashboard(
+    publisher_id: str,
     session: dict = Depends(require_publisher),
     db: Session = Depends(get_db)
 ):
     """ 
     Get publisher dashboard data
     """
-    dashboard_service = DashboardService(db)
-    return await dashboard_service.get_publisher_dashboard(session["user_id"])
+    # Verify user is accessing their own dashboard
+    if str(session["user_id"]) != publisher_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Not authorized to view this dashboard"
+        )
+    
+    try:
+        dashboard_service = DashboardService(db)
+        return await dashboard_service.get_publisher_dashboard(publisher_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Error retrieving dashboard data"
+        ) 
 
 # AI Company-specific dashboard
-@router.get("/ai-company")
+@router.get("/ai-company/{company_id}")
 async def get_ai_company_dashboard(
+    company_id: str,
     session: dict = Depends(require_ai_company),
     db: Session = Depends(get_db)
 ):
     """
     Get AI company dashboard data
     """
-    dashboard_service = DashboardService(db)
-    return await dashboard_service.get_ai_company_dashboard(session["user_id"])
+    # Verify user is accessing their own dashboard
+    if str(session["user_id"]) != company_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Not authorized to view this dashboard"
+        )
+    
+    try:
+        dashboard_service = DashboardService(db)
+        return await dashboard_service.get_ai_company_dashboard(company_id)
+    except Exception as e:
+        logger.error(f"Error getting AI company dashboard: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error retrieving dashboard data"
+        )
 
 @router.get("/profile")
 async def get_user_profile(

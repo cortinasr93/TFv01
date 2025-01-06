@@ -14,8 +14,6 @@ export async function POST(request: Request) {
                 settings: {
                     description: body.description,
                     content_categories: body.contentCategories,
-                    estimated_volume: body.estimatedVolume,
-                    update_frequency: body.updateFrequency
                 }
             };
 
@@ -32,21 +30,25 @@ export async function POST(request: Request) {
         })
         
         if (!response.ok) {
-            const text = await response.text()
-            console.error('Backend error response:', text);
-
-            let errorMessage;
-            try {
-                const errorData = JSON.parse(text);
-                errorMessage = errorData.detail;
-            } catch {
-                errorMessage = text;
-            }
-            throw new Error(errorMessage);
+            const errorData = await response.json();
+            return NextResponse.json(errorData, {status: response.status });
         }
 
         const data = await response.json();
-        return NextResponse.json(data);
+
+        const nextResponse = NextResponse.json(data);
+
+        // Set session cookie
+        nextResponse.cookies.set({
+            name: 'session_id',
+            value: data.session_id,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/'
+        });
+
+        return nextResponse;
 
     } catch (error) {
         console.error('Registration error:', error);

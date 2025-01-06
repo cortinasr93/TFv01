@@ -2,22 +2,27 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-export async function GET(
-  request: Request,
-  { params }: { params : { publisherId: string }}
-) {  
+type Props = {
+  params: { publisherId: string }
+};
+
+export async function GET(request: Request, { params }: Props) {
   try {
     
-    const { publisherId } = await params;
+    // Get session cookie
     const cookieStore = await cookies();
     const sessionId = cookieStore.get('session_id');
 
-    console.log('Fetching dashboard with session:', sessionId?.value)
+    console.log('Fetching dashboard with session:', sessionId?.value);
 
-    const response = await fetch(`http://localhost:8000/api/dashboard/${publisherId}`, {
+    if (!sessionId) {
+      return NextResponse.json({ error: 'No session found' }, { status: 401 });
+    }
+
+    const response = await fetch(`http://localhost:8000/api/dashboard/publisher/${params.publisherId}`, {
         credentials: 'include',
         headers: {
-            'Cookie': sessionId ? `session_id=${sessionId.value}` : '', // Forward cookies from the request
+            'Cookie': `session_id=${sessionId.value}`, // Forward cookies from the request
             'Content-Type': 'application/json'
         }
     });

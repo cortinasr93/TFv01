@@ -27,43 +27,38 @@ export async function POST(request: Request) {
       })
     });
 
+    const responseText = await response.text()
     console.log('Login response status:', response.status);
     console.log('Response headers:', Object.fromEntries(response.headers));
-
-    const text = await response.text();
-    console.log('Login response text:', text);
-
-    // Try to parse JSON only if we get a JSON content type
-    let data;
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-        try{
-            data = JSON.parse(text);
-        } catch (e) {
-            console.error('JSON parse error:', e);
-            throw new Error('Invalid JSON response from server');
-        }
-    } else {
-        console.error('Unexpected content type:', contentType);
-        throw new Error(`Server returned unexpected content type: ${contentType}`);
-    }
+    console.log('Login response text:', responseText);
 
     if (!response.ok) {
-        throw new Error(data.detail || 'Login failed');
+        throw new Error(responseText);
     }
+
+    // Parse response data
+    const data = JSON.parse(responseText);
+    console.log('Session ID received:', data.session_id);
+    console.log('User ID received:', data.user_id);
 
     // Get the host from the headers
     const headersList = await headers();
     const host = headersList.get('host') || 'localhost:3000';
     const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
 
+    // Construct redirect URL based on user type
+    const dashboardPath = body.userType === 'publisher'
+        ? `/dashboard/publisher/${data.user_id}`
+        : `/dashboard/ai-company/${data.user_id}`;
+    
     // Construct absolute URL for redirect
-    const redirectUrl = `${protocol}://${host}/dashboard/${data.user_id}`;
+    const redirectUrl = `${protocol}://${host}${dashboardPath}`;
+    console.log('Redirecting to:', redirectUrl);
 
+    // Create response with redirect
+    const nextResponse = NextResponse.redirect(redirectUrl);
 
     // Set the session ID cookie
-    const nextResponse = NextResponse.redirect(redirectUrl); // redirect to user-specific dashboard
-
     nextResponse.cookies.set({
         name: 'session_id',
         value: data.session_id,
