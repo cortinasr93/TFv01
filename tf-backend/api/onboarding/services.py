@@ -140,6 +140,14 @@ class OnboardingService:
             self.db.flush()
             logger.info(f"Created AI company record with ID: {company.id}")
             
+            # Create session for new AI company
+            session_id = self.session_manager.create_session({
+                "id": str(company.id),
+                "email": company.email,
+                "name": company.name,
+                "user_type": "ai-company"
+            })
+            
             # Create stripe customer
             stripe_customer = stripe.Customer.create(
                 email=email,
@@ -161,6 +169,7 @@ class OnboardingService:
 
             return {
                 "company_id": str(company.id),
+                "session_id": session_id,
                 "setup_complete": True
             }
         

@@ -36,7 +36,23 @@ export async function POST(request: Request) {
         throw new Error(errorMessage);
     }
 
-    return NextResponse.json(await response.json());
+    const data = await response.json();
+
+    // Create response with the session cookie
+    const nextResponse = NextResponse.json(data);
+
+    // Set session cookie
+    nextResponse.cookies.set({
+        name: 'session_id',
+        value: data.session_id,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/'
+    });
+
+    return nextResponse;
+
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Registration failed' },

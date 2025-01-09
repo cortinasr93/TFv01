@@ -39,7 +39,39 @@ interface DashboardData {
   }>;
 }
 
-function Loading() {
+// API response interface to match backend structure
+interface APIResponse {
+    companyName: string;
+    usage_stats: {
+      totalTokens: number;
+      totalCost: number;
+      publishersAccessed: number;
+      averageCostPerToken: number;
+    };
+    timeSeriesData: Array<{
+      time: string;
+      tokens: number;
+      cost: number;
+    }>;
+    dataSources: Array<{
+      publisherId: string;
+      publisherName: string;
+      tokensUsed: number;
+      cost: number;
+      publisherEarned: number;
+      lastAccessed: string;
+      contentType: string;
+    }>;
+    recentTransactions: Array<{
+      id: string;
+      date: string;
+      amount: number;
+      description: string;
+      status: string;
+    }>;
+}
+
+function InitialLoading() {
   return (
     <div className="flex items-center justify-center h-screen">
       <div className="text-lg">Loading dashboard...</div>
@@ -47,17 +79,9 @@ function Loading() {
   );
 }
 
-function ErrorMessage({ message }: { message: string }) {
-  return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="text-lg text-red-600">{message}</div>
-    </div>
-  );
-}
-
 export default function AICompanyDashboard({ params }: { params: Promise<{ companyId: string }> }) {
   const resolvedParams = use(params);
-  const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<DashboardData>({
     companyName: '',
@@ -75,53 +99,61 @@ export default function AICompanyDashboard({ params }: { params: Promise<{ compa
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
         const response = await fetch(`/api/dashboard/ai-company/${resolvedParams.companyId}`, {
           credentials: 'include'
         });
 
-        const dashboardData = await response.json();
-        console.log("Received dashboard data:", dashboardData);
-
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || 'Failed to fetch dashboard data');
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to fetch dashboard data');
         }
 
-        const processedData: DashboardData = {
-            companyName: dashboardData.companyName || 'Company',
-            usageStats: {
-              totalTokens: dashboardData.usageStats?.totalTokens || 0,
-              totalCost: dashboardData.usageStats?.totalCost || 0,
-              publishersAccessed: dashboardData.usageStats?.publishersAccessed || 0,
-              averageCostPerToken: dashboardData.usageStats?.averageCostPerToken || 0
+        const rawData: APIResponse = await response.json();
+        console.log("Raw API response:", rawData);
+
+        // Transform data to match our interface
+        const transformedData: DashboardData = {
+            companyName: rawData.companyName || '',
+            usageStats: rawData.usage_stats || {
+              totalTokens: 0,
+              totalCost: 0,
+              publishersAccessed: 0,
+              averageCostPerToken: 0
             },
-            timeSeriesData: dashboardData.timeSeriesData || [],
-            dataSources: dashboardData.dataSources || [],
-            recentTransactions: dashboardData.recentTransactions || []
+            timeSeriesData: rawData.timeSeriesData || [],
+            dataSources: rawData.dataSources || [],
+            recentTransactions: rawData.recentTransactions || []
           };
-        
-        setData(processedData);
+
+        console.log("Transformed data:", transformedData);
+        setData(transformedData);
         setError(null);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
       } finally {
-        setLoading(false);
+        setInitialLoad(false);
       }
     };
-
+    
+    // Initial fetch
     fetchData();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
-  }, [resolvedParams.companyId]);
 
-  if (loading) return <Loading />;
-  if (error) return <ErrorMessage message={error} />;
-  if (!data) return <ErrorMessage message="No data available" />;
+    const intervalId = setInterval(fetchData, 30000);
 
-  return (
-    <div className="p-6 max-w-7xl mx-auto">
+    return () => clearInterval(intervalId);
+}, [resolvedParams.companyId]);
+
+if (initialLoad) return <InitialLoading />;
+
+return (
+<div className="p-6 max-w-7xl mx-auto">
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-800">{error}</p>
+        </div>
+      )}
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">{data.companyName} Dashboard</h1>
         <p className="mt-2 text-gray-600">Monitor your API usage and costs</p>
@@ -280,5 +312,5 @@ export default function AICompanyDashboard({ params }: { params: Promise<{ compa
         </div>
       </div>
     </div>
-  );
+);
 }

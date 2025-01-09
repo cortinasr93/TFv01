@@ -93,7 +93,9 @@ export default function AICompanyRegistration() {
       if (!response.ok) throw new Error('Registration failed');
 
       const data = await response.json();
-      router.push('/dashboard');
+
+      // After successful registration, redirect to company dashboard
+      router.push(`/dashboard/ai-company/${data.company_id}`);
     } catch (error) {
       setErrors({ submit: 'Registration failed. Please try again.' });
     } finally {

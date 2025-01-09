@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.onboarding.services import OnboardingService
 from core.database import engine, get_db
 from core.models import detection, publisher, Base
+from api.access_tokens import router as token_router
 from api.detection import router as detection_router
 from api.dashboard import router as dashboard_router
 from api.onboarding import router as onboarding_router
@@ -42,6 +43,7 @@ app.include_router(detection_router)
 app.include_router(dashboard_router)
 app.include_router(onboarding_router)
 app.include_router(auth_router)
+app.include_router(token_router)
 
 # Root endpoint
 @app.get("/")

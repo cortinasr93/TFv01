@@ -41,11 +41,7 @@ interface DashboardData {
   recentDetections: Detection[]
 }
 
-interface ErrorProps {
-    message: string;
-}
-
-function Loading() {
+function InitialLoading() {
   return (
     <div className="flex items-center justify-center h-screen">
       <div className="text-lg">Loading dashboard...</div>
@@ -53,17 +49,9 @@ function Loading() {
   );
 }
 
-function ErrorMessage({ message }: ErrorProps) {
-  return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="text-lg text-red-600">{message}</div>
-    </div>
-  );
-}
-
 export default function PublisherDashboard({ params }: { params: Promise<{ publisherId: string }> }) {
   const resolvedParams = use(params);
-  const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -71,7 +59,6 @@ export default function PublisherDashboard({ params }: { params: Promise<{ publi
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
         console.log('Starting dashboard data fetch');
 
         const response = await fetch(`/api/dashboard/publisher/${resolvedParams.publisherId}`, {
@@ -85,28 +72,55 @@ export default function PublisherDashboard({ params }: { params: Promise<{ publi
             throw new Error(errorData.details || 'Failed to fetch dashboard data');
         }
 
-        const dashboardData = await response.json();
-        console.log('Data successfully fetched');
-        setData(dashboardData);
+        const rawData = await response.json();
+        console.log('Raw dashboard data:', rawData);
+
+        // Transform data and set defaults
+        const transformedData: DashboardData = {
+          publisherName: rawData.publisherName || '',
+          stats: rawData.stats || {
+            totalRequests: 0,
+            botPercentage: 0,
+            uniqueIPs: 0
+          },
+          timeSeriesData: rawData.timeSeriesData || [],
+          botTypes: rawData.botTypes || [],
+          earnings: rawData.earnings || {
+            totalEarned: 0,
+            currentBalance: 0
+          },
+          recentDetections: rawData.recentDetections || []
+        };
+
+        console.log('Transformed dashboard data:', transformedData);
+
+        setData(transformedData);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
       } finally {
-        setLoading(false);
+        setInitialLoad(false);
       }
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
+
+    const intervalId = setInterval(fetchData, 30000);
+
+    return () => clearInterval(intervalId);
   }, [resolvedParams.publisherId]);
 
-  if (loading) return <Loading />;
-  if (error) return <ErrorMessage message={error as string} />;
-  if (!data) return <ErrorMessage message="No data available" />;
+  if (initialLoad) return <InitialLoading />;
+  if (!data) return null;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-red-800">{error}</p>
+        </div>
+      )}
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">{data.publisherName} Analytics</h1>
         <p className="mt-2 text-gray-600">Monitor your content usage and earnings</p>
