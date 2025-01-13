@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
+    "intersection-observer": "^0.12.2",
     "node": "^23.5.0",
     "react-router-dom": "^7.1.1"
   }

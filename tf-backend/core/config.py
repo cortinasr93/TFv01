@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     PAYOUT_THRESHOLD: float = 100.0
     MIN_PAYOUT_AMOUNT: float = 20.0
     
+    AWS_ACCESS_KEY_ID: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY")
+    AWS_REGION: str = os.getenv("AWS_REGION")
+    
     # Database URLs
     @property
     def SQLALCHEMY_DATABASE_URL(self) -> str:

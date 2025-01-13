@@ -5,11 +5,11 @@ from typing import Optional, List
 from pydantic import BaseModel, UUID4
 from core.database import get_db
 from core.middleware import require_ai_company, require_publisher
-from core.models.access_tokens import AccessType, AccessTokenStatus
+from core.models.access_tokens import AccessTokenStatus
 from .services import AccessTokenService
 import logging
 
-router = APIRouter(prefix="api/access-tokens", tags=["access-tokens"])
+router = APIRouter(prefix="/api/access-tokens", tags=["access-tokens"])
 logger = logging.getLogger(__name__)
 
 class TokenCreationResponse(BaseModel):
@@ -23,6 +23,7 @@ class ValidationResponse(BaseModel):
 
 class UsageRecord(BaseModel):
     timestamp: datetime
+    publisher_id: UUID4
     request_path: str
     ai_tokens_processed: int
     content_type: Optional[str]
@@ -162,6 +163,7 @@ async def get_token_usage(
         return [
             {
                 "timestamp": record.timestamp,
+                "publisher_id": record.publisher_id,
                 "request_path": record.request_path,
                 "ai_tokens_processed": record.ai_tokens_processed,
                 "content_type": record.content_type,

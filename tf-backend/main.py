@@ -10,6 +10,7 @@ from api.access_tokens import router as token_router
 from api.detection import router as detection_router
 from api.dashboard import router as dashboard_router
 from api.onboarding import router as onboarding_router
+from api.contact import router as contact_router
 from api.auth import router as auth_router
 #from api.payments import router as payments_router
 import logging
@@ -44,6 +45,8 @@ app.include_router(dashboard_router)
 app.include_router(onboarding_router)
 app.include_router(auth_router)
 app.include_router(token_router)
+app.include_router(contact_router)
+
 
 # Root endpoint
 @app.get("/")

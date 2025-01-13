@@ -12,11 +12,6 @@ class AccessTokenStatus(enum.Enum):
     EXPIRED = "expired"
     SUSPENDED = "suspended"
 
-class AccessType(enum.Enum):
-    TRAINING = "training"  # For model training access
-    RAG = "rag"           # For retrieval-augmented generation
-    BOTH = "both"         # Access for both purposes
-
 class AccessToken(Base):
     """Stores API access tokens issued to AI companies"""
     __tablename__ = "access_tokens"
@@ -26,21 +21,12 @@ class AccessToken(Base):
     
     # Ownership and relationships
     company_id = Column(UUID(as_uuid=True), ForeignKey('ai_companies.id'), nullable=False)
-    publisher_id = Column(UUID(as_uuid=True), ForeignKey('publishers.id'), nullable=False)
     
     # Token configuration
-    access_type = Column(SQLEnum(AccessType), nullable=False)
     status = Column(SQLEnum(AccessTokenStatus), nullable=False, default=AccessTokenStatus.ACTIVE)
     
-    # Rate limits and quotas
-    daily_request_limit = Column(Integer, nullable=True)
-    monthly_ai_token_limit = Column(Integer, nullable=True)  # Limit on AI tokens processed
-    rate_limit_per_minute = Column(Integer, default=60)
-    
     # Time validity
-    created_at = Column(DateTime, default=datetime.utcnow)
-    expires_at = Column(DateTime, nullable=True)
-    last_used_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
     revoked_at = Column(DateTime, nullable=True)
     
     # Usage tracking
@@ -49,13 +35,12 @@ class AccessToken(Base):
     
     # Additional configuration
     settings = Column(JSONB, default={})
-    metadata = Column(JSONB, default={})
+    token_metadata = Column(JSONB, default={})
 
     # Relationships
     company = relationship("AICompany", back_populates="access_tokens")
-    publisher = relationship("Publisher", back_populates="access_tokens")
     usage_records = relationship("APIUsageRecord", back_populates="access_token")
-
+    
     def __repr__(self):
         return f"<AccessToken(id={self.id}, company={self.company_id}, status={self.status})>"
 
@@ -64,10 +49,11 @@ class APIUsageRecord(Base):
     __tablename__ = "api_usage_records"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    access_token_id = Column(UUID(as_uuid=True), ForeignKey('access_tokens.id'), nullable=False)
-    
+    access_token_id = Column(UUID(as_uuid=True), ForeignKey('access_tokens.id'), nullable=False, index=True)
+    publisher_id = Column(UUID(as_uuid=True), ForeignKey('publishers.id'), nullable=False, index=True)
+
     # Request details
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=datetime.now, index=True)
     request_path = Column(String, nullable=True)
     ip_address = Column(String, nullable=True)
     user_agent = Column(String, nullable=True)
@@ -82,10 +68,11 @@ class APIUsageRecord(Base):
     error_message = Column(String, nullable=True)
     
     # Additional data
-    metadata = Column(JSONB, default={})
+    usage_metadata = Column(JSONB, default={})
 
     # Relationship
     access_token = relationship("AccessToken", back_populates="usage_records")
+    publisher = relationship("Publisher")
 
     def __repr__(self):
         return f"<APIUsageRecord(token_id={self.access_token_id}, ai_tokens={self.ai_tokens_processed})>"

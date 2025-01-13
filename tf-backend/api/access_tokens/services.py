@@ -8,7 +8,7 @@ import json
 import redis
 import secrets
 import logging
-from core.models.access_tokens import AccessToken, AccessTokenStatus, AccessType, APIUsageRecord
+from core.models.access_tokens import AccessToken, AccessTokenStatus, APIUsageRecord
 from core.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -59,13 +59,17 @@ class AccessTokenService:
                 settings={
                     "created_after_setup_payment": True,
                     "creation_date": datetime.now(timezone.utc).isoformat()
+                },
+                token_metadata={
+                    "created_via": "company_setup",
+                    "initial_creation": True
                 }
             )
             
             self.db.add(access_token)
             self.db.commit()
             
-            await self.cache_token(access_token)
+            await self.cache_token_info(access_token)
 
             logger.info(f"Created new access token for company {company_id}")
             return access_token
@@ -95,7 +99,7 @@ class AccessTokenService:
             whitelist_key = f"publisher:{publisher_id}:allowed_tokens"
             
             # If we want to store additional access info per token
-            token_info_key = f"publisher:{publisher_id}:token{token}"
+            token_info_key = f"publisher:{publisher_id}:token:{token}"
             access_data = {
                 "added_at": datetime.now(timezone.utc).isoformat(),
                 "access_level": access_level or {}
@@ -152,8 +156,12 @@ class AccessTokenService:
                 logger.warning(f"Token {token[:10]}... not in publisher {publisher_id} whitelist")
                 return False
             
+            if not await self.check_rate_limits_redis(token, publisher_id):
+                logger.warning(f"Rate limits exceeded for token {token[:10]}...")
+                return False
+            
             # Verify token is still active
-            token_info = await self._get_cached_token_info(token)
+            token_info = await self.get_cached_token_info(token)
             if not token_info:
                 logger.warning(f"Token {token[:10]}... not found or not active")
                 return False
@@ -174,7 +182,8 @@ class AccessTokenService:
             token_data = {
                 "id": str(token.id),
                 "company_id": str(token.company_id),
-                "status": token.status.value
+                "status": token.status.value,
+                "created_at": token.created_at.isoformat()
             }
 
             self.redis.set(
@@ -258,8 +267,17 @@ class AccessTokenService:
         """
         try:
             
+            # Get token record
+            token_record = self.db.query(AccessToken).filter(
+                AccessToken.token == token
+            ).first()
+            
+            if not token_record:
+                logger.error(f"Token {token[:10]}... not found in database")
+                return
+            
             usage = APIUsageRecord(
-                access_token_id=token,
+                access_token_id=token_record.id,
                 publisher_id=publisher_id,
                 ip_address=metadata.get('ip_address'),
                 user_agent=metadata.get('user_agent'),
@@ -267,10 +285,13 @@ class AccessTokenService:
                 ai_tokens_processed=metadata.get('ai_tokens_processed', 0),
                 content_type=metadata.get('content_type'),
                 content_size_bytes=metadata.get('content_size_bytes'),
-                metadata=metadata or {}
+                usage_metadata=metadata or {}
             )
             
             self.db.add(usage)
+            token_record.total_api_requests += 1
+            token_record.total_ai_tokens_processed += metadata.get('ai_tokens_processed', 0)
+
             self.db.commit()
 
         except Exception as e:
