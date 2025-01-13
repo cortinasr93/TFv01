@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Navbar from '../../components/Navbar';
+import Footer from '../../components/Footer';
+import ScrollAnimation from '../../components/ScrollAnimation';
 
 interface FormErrors {
   name?: string;
@@ -26,7 +29,6 @@ interface FormData {
   description: string;
   contentCategories: string[];
   acceptedTerms: boolean;
-  acceptedPrivacy: boolean;
 }
 
 export default function PublisherRegistration() {
@@ -45,7 +47,6 @@ export default function PublisherRegistration() {
     description: '',
     contentCategories: [],
     acceptedTerms: false,
-    acceptedPrivacy: false,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -97,7 +98,7 @@ export default function PublisherRegistration() {
     if (!formData.contentType) newErrors.contentType = 'Content type is required';
 
     if (!formData.acceptedTerms) {
-        newErrors.submit = 'You must accept the Terms and conditions to register';
+        newErrors.submit = 'You must accept the Terms and Privacy Policy to register';
     }
 
     setErrors(newErrors);
@@ -157,240 +158,255 @@ export default function PublisherRegistration() {
     }
 };
 
-return(
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
+return (
+  <div className="min-h-screen bg-gradient-to-br from-[#b1c9a7] via-[#e9efe6] to-[#79a267]">
+    <Navbar />
+
+    <div className="py-12 px-4 sm:px-6 lg:px-8">
+      <ScrollAnimation>
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Publisher Registration</h2>
-          <p className="mt-2 text-gray-600">Join TrainFair and start monetizing your content</p>
+          <h2 className="text-3xl font-bold text-[#1c2617]">Publisher Registration</h2>
+          <p className="mt-2 text-[#4a653e]">Join TrainFair and start monetizing your content</p>
         </div>
+      </ScrollAnimation>
 
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Account Information */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="name">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className={`mt-1 block w-full rounded-md ${
-                    errors.name ? 'border-red-500' : 'border-gray-300'
-                  } shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-                />
-                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+      <div className="max-w-2xl mx-auto">
+        <ScrollAnimation>
+          <div className="bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Account Information */}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="name">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full rounded-md ${
+                      errors.name ? 'border-red-500' : 'border-gray-300'
+                    } shadow-sm focus:border-[#4a653e] focus:ring-[#4a653e]`}
+                  />
+                  {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="email">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full rounded-md ${
+                      errors.email ? 'border-red-500' : 'border-gray-300'
+                    } shadow-sm focus:border-[#4a653e] focus:ring-[#4a653e]`}
+                  />
+                  {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="email">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`mt-1 block w-full rounded-md ${
-                    errors.email ? 'border-red-500' : 'border-gray-300'
-                  } shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-                />
-                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-              </div>
-            </div>
+              {/* Password Fields */}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="password">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full rounded-md ${
+                      errors.password ? 'border-red-500' : 'border-gray-300'
+                    } shadow-sm focus:border-[#4a653e] focus:ring-[#4a653e]`}
+                  />
+                  {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+                </div>
 
-            {/* Password Fields */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="password">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`mt-1 block w-full rounded-md ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  } shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-                />
-                {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="confirmPassword">
-                  Confirm Password
-                </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className={`mt-1 block w-full rounded-md ${
-                    errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                  } shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-                />
-                {errors.confirmPassword && (
-                  <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Company Information */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="companyName">
-                  Company Name
-                </label>
-                <input
-                  type="text"
-                  id="companyName"
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  className={`mt-1 block w-full rounded-md ${
-                    errors.companyName ? 'border-red-500' : 'border-gray-300'
-                  } shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-                />
-                {errors.companyName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.companyName}</p>
-                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="confirmPassword">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full rounded-md ${
+                      errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                    } shadow-sm focus:border-[#4a653e] focus:ring-[#4a653e]`}
+                  />
+                  {errors.confirmPassword && (
+                    <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                  )}
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="website">
-                  Website URL
-                </label>
-                <input
-                  type="url"
-                  id="website"
-                  name="website"
-                  value={formData.website}
-                  onChange={handleChange}
-                  placeholder="https://"
-                  className={`mt-1 block w-full rounded-md ${
-                    errors.website ? 'border-red-500' : 'border-gray-300'
-                  } shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-                />
-                {errors.website && <p className="mt-1 text-sm text-red-600">{errors.website}</p>}
+              {/* Company Information */}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="companyName">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    id="companyName"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full rounded-md ${
+                      errors.companyName ? 'border-red-500' : 'border-gray-300'
+                    } shadow-sm focus:border-[#4a653e] focus:ring-[#4a653e]`}
+                  />
+                  {errors.companyName && (
+                    <p className="mt-1 text-sm text-red-600">{errors.companyName}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="website">
+                    Website URL
+                  </label>
+                  <input
+                    type="url"
+                    id="website"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleChange}
+                    placeholder="https://"
+                    className={`mt-1 block w-full rounded-md ${
+                      errors.website ? 'border-red-500' : 'border-gray-300'
+                    } shadow-sm focus:border-[#4a653e] focus:ring-[#4a653e]`}
+                  />
+                  {errors.website && <p className="mt-1 text-sm text-red-600">{errors.website}</p>}
+                </div>
               </div>
-            </div>
 
-            {/* Content Information */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700" htmlFor="contentType">
-                Content Type
-              </label>
-              <select
-                id="contentType"
-                name="contentType"
-                value={formData.contentType}
-                onChange={handleChange}
-                className={`mt-1 block w-full rounded-md ${
-                  errors.contentType ? 'border-red-500' : 'border-gray-300'
-                } shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-              >
-                <option value="">Select content type</option>
-                <option value="news">News Articles</option>
-                <option value="blog">Blog Posts</option>
-                <option value="academic">Academic Papers</option>
-                <option value="documentation">Technical Documentation</option>
-                <option value="other">Other</option>
-              </select>
-              {errors.contentType && (
-                <p className="mt-1 text-sm text-red-600">{errors.contentType}</p>
-              )}
-            </div>
+              {/* Content Information */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700" htmlFor="contentType">
+                  Content Type
+                </label>
+                <select
+                  id="contentType"
+                  name="contentType"
+                  value={formData.contentType}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full rounded-md ${
+                      errors.contentType ? 'border-red-500' : 'border-gray-300'
+                    } shadow-sm focus:border-[#4a653e] focus:ring-[#4a653e]`}
+                  >
+                    <option value="">Select content type</option>
+                    <option value="news">News Articles</option>
+                    <option value="blog">Blog Posts</option>
+                    <option value="academic">Academic Papers</option>
+                    <option value="documentation">Technical Documentation</option>
+                    <option value="other">Other</option>
+                  </select>
+                  {errors.contentType && (
+                    <p className="mt-1 text-sm text-red-600">{errors.contentType}</p>
+                  )}
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700" htmlFor="description">
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                rows={3}
-                value={formData.description}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                placeholder="Tell us about your content..."
-              />
-            </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="description">
+                    Description
+                  </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    rows={3}
+                    value={formData.description}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#4a653e] focus:ring-[#4a653e]"
+                    placeholder="Tell us about your content..."
+                  />
+                </div>
 
-            {/* Categories */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Content Categories
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {['Technology', 'Science', 'Business', 'Health', 'Education', 'Arts', 'Entertainment'].map((category) => (
-                  <div key={category} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`category-${category}`}
-                      checked={formData.contentCategories.includes(category)}
-                      onChange={(e) => handleCategoryChange(category, e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <label htmlFor={`category-${category}`} className="ml-2 text-sm text-gray-700">
-                      {category}
-                    </label>
+                {/* Categories */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Content Categories
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {['Technology', 'Science', 'Business', 'Health', 'Education', 'Arts', 'Entertainment'].map((category) => (
+                      <div key={category} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`category-${category}`}
+                          checked={formData.contentCategories.includes(category)}
+                          onChange={(e) => handleCategoryChange(category, e.target.checked)}
+                          className="h-4 w-4 rounded border-gray-300 text-[#4a653e] focus:ring-[#4a653e]"
+                        />
+                        <label htmlFor={`category-${category}`} className="ml-2 text-sm text-gray-700">
+                          {category}
+                        </label>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            {/* Terms and Conditions */}
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="acceptedTerms"
-                name="acceptedTerms"
-                checked={formData.acceptedTerms}
-                onChange={handleChange}
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-              />
-              <label htmlFor="acceptedTerms" className="ml-2 text-sm text-gray-700">
-                I accept the <a href="#" className="text-indigo-600 hover:text-indigo-500">Terms and Conditions</a>
-              </label>
-            </div>
+                {/* Terms and Privacy */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="acceptedTerms"
+                    name="acceptedTerms"
+                    checked={formData.acceptedTerms}
+                    onChange={handleChange}
+                    className="h-4 w-4 rounded border-gray-300 text-[#4a653e] focus:ring-[#4a653e]"
+                  />
+                  <label htmlFor="acceptedTerms" className="ml-2 text-sm text-gray-700">
+                    I accept the{' '}
+                    <Link href="/terms" className="text-[#4a653e] hover:text-[#79a267] transition-colors">
+                      Terms and Conditions
+                    </Link>{' '}
+                    and{' '}
+                    <Link href="/privacy" className="text-[#4a653e] hover:text-[#79a267] transition-colors">
+                      Privacy Policy
+                    </Link>
+                  </label>
+                </div>
 
-            {/* Error Message */}
-            {errors.submit && (
-              <div className="mt-4 p-2 bg-red-100 text-red-700 rounded">
-                {errors.submit}
-              </div>
-            )}
+                {/* Error Message */}
+                {errors.submit && (
+                  <div className="mt-4 p-2 bg-red-100 text-red-700 rounded">
+                    {errors.submit}
+                  </div>
+                )}
 
-            {/* Submit Button */}
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                  loading ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                {loading ? 'Processing...' : 'Complete Registration'}
-              </button>
-            </div>
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4a653e] hover:bg-[#79a267] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4a653e] transition-colors ${
+                    loading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {loading ? 'Processing...' : 'Complete Registration'}
+                </button>
 
-            <div className="text-center text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link href="/login" className="text-indigo-600 hover:text-indigo-500">
-                Sign in
-              </Link>
+                <div className="text-center text-sm text-gray-600">
+                  Already have an account?{' '}
+                  <Link href="/login" className="text-[#4a653e] hover:text-[#79a267] transition-colors">
+                    Sign in
+                  </Link>
+                </div>
+              </form>
             </div>
-          </form>
+          </ScrollAnimation>
         </div>
       </div>
+      
+      <Footer />
     </div>
-    );
+  );
 }

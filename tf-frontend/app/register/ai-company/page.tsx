@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Navbar from '../../components/Navbar';
+import Footer from '../../components/Footer';
+import ScrollAnimation from '../../components/ScrollAnimation';
 
 interface FormErrors {
   companyName?: string;
@@ -74,6 +78,10 @@ export default function AICompanyRegistration() {
 
     if (!formData.website) newErrors.website = 'Website is required';
 
+    if (!formData.acceptedTerms) {
+      newErrors.submit = 'You must accept the Terms and Privacy Policy to register';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -104,147 +112,164 @@ export default function AICompanyRegistration() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">AI Company Registration</h2>
+    <div className="min-h-screen bg-gradient-to-br from-[#b1c9a7] via-[#e9efe6] to-[#79a267]">
+      <Navbar />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700" htmlFor="companyName">
-                Company Name
-              </label>
-              <input
-                type="text"
-                id="companyName"
-                name="companyName"
-                value={formData.companyName}
-                onChange={handleChange}
-                className={`mt-1 block w-full rounded-md ${
-                  errors.companyName ? 'border-red-500' : 'border-gray-300'
-                } shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-              />
-              {errors.companyName && <p className="mt-1 text-sm text-red-600">{errors.companyName}</p>}
+      <div className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
+          <ScrollAnimation>
+            <div className="bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <h2 className="text-2xl font-bold text-[#1c2617] mb-6">AI Company Registration</h2>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="companyName">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    id="companyName"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full rounded-md ${
+                      errors.companyName ? 'border-red-500' : 'border-gray-300'
+                    } shadow-sm focus:border-[#4a653e] focus:ring-[#4a653e]`}
+                  />
+                  {errors.companyName && (
+                    <p className="mt-1 text-sm text-red-600">{errors.companyName}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="email">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full rounded-md ${
+                      errors.email ? 'border-red-500' : 'border-gray-300'
+                    } shadow-sm focus:border-[#4a653e] focus:ring-[#4a653e]`}
+                  />
+                  {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="website">
+                    Company Website
+                  </label>
+                  <input
+                    type="url"
+                    id="website"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleChange}
+                    placeholder="https://"
+                    className={`mt-1 block w-full rounded-md ${
+                      errors.website ? 'border-red-500' : 'border-gray-300'
+                    } shadow-sm focus:border-[#4a653e] focus:ring-[#4a653e]`}
+                  />
+                  {errors.website && <p className="mt-1 text-sm text-red-600">{errors.website}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="password">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full rounded-md ${
+                      errors.password ? 'border-red-500' : 'border-gray-300'
+                    } shadow-sm focus:border-[#4a653e] focus:ring-[#4a653e]`}
+                  />
+                  {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="confirmPassword">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full rounded-md ${
+                      errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                    } shadow-sm focus:border-[#4a653e] focus:ring-[#4a653e]`}
+                  />
+                  {errors.confirmPassword && (
+                    <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="billingEmail">
+                    Billing Email (Optional)
+                  </label>
+                  <input
+                    type="email"
+                    id="billingEmail"
+                    name="billingEmail"
+                    value={formData.billingEmail}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#4a653e] focus:ring-[#4a653e]"
+                    placeholder="Same as primary email if left empty"
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="acceptedTerms"
+                    name="acceptedTerms"
+                    checked={formData.acceptedTerms}
+                    onChange={handleChange}
+                    className="h-4 w-4 rounded border-gray-300 text-[#4a653e] focus:ring-[#4a653e]"
+                  />
+                  <label htmlFor="acceptedTerms" className="ml-2 text-sm text-gray-700">
+                    I accept the{' '}
+                    <Link href="/terms" className="text-[#4a653e] hover:text-[#79a267] transition-colors">
+                      Terms and Conditions
+                    </Link>{' '}
+                    and{' '}
+                    <Link href="/privacy" className="text-[#4a653e] hover:text-[#79a267] transition-colors">
+                      Privacy Policy
+                    </Link>
+                  </label>
+                </div>
+
+                {errors.submit && (
+                  <div className="mt-4 p-2 bg-red-100 text-red-700 rounded">
+                    {errors.submit}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4a653e] hover:bg-[#79a267] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4a653e] transition-colors ${
+                    loading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {loading ? 'Processing...' : 'Complete Registration'}
+                </button>
+              </form>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700" htmlFor="email">
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`mt-1 block w-full rounded-md ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                } shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-              />
-              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700" htmlFor="website">
-                Company Website
-              </label>
-              <input
-                type="url"
-                id="website"
-                name="website"
-                value={formData.website}
-                onChange={handleChange}
-                placeholder="https://"
-                className={`mt-1 block w-full rounded-md ${
-                  errors.website ? 'border-red-500' : 'border-gray-300'
-                } shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-              />
-              {errors.website && <p className="mt-1 text-sm text-red-600">{errors.website}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700" htmlFor="password">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className={`mt-1 block w-full rounded-md ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                } shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-              />
-              {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700" htmlFor="confirmPassword">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className={`mt-1 block w-full rounded-md ${
-                  errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                } shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-              />
-              {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700" htmlFor="billingEmail">
-                Billing Email (Optional)
-              </label>
-              <input
-                type="email"
-                id="billingEmail"
-                name="billingEmail"
-                value={formData.billingEmail}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                placeholder="Same as primary email if left empty"
-              />
-            </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="acceptedTerms"
-                name="acceptedTerms"
-                checked={formData.acceptedTerms}
-                onChange={handleChange}
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-              />
-              <label htmlFor="acceptedTerms" className="ml-2 text-sm text-gray-700">
-                I accept the <a href="#" className="text-indigo-600 hover:text-indigo-500">Terms and Conditions</a>
-              </label>
-            </div>
-
-            {errors.submit && (
-              <div className="mt-4 p-2 bg-red-100 text-red-700 rounded">
-                {errors.submit}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                loading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {loading ? 'Processing...' : 'Complete Registration'}
-            </button>
-          </form>
+          </ScrollAnimation>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 }
