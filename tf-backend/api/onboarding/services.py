@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from typing import Dict, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from core.models.payment import PublisherStripeAccount, AICompanyPaymentAccount
 from core.security import hash_password
 from core.models.publisher import Publisher
@@ -62,30 +62,42 @@ class OnboardingService:
             stripe_account = stripe.Account.create(
                 type="express",
                 country="US",
+                business_type="company",
                 email=email,
                 capabilities={
                     "transfers": {"requested": True},
                     "card_payments": {"requested": True}
                 },
-                business_type="company",
                 business_profile={
-                    "url": website
+                    "name": name,
+                    "url": website,
+                },
+                metadata={
+                    "publisher_id": str(publisher.id),
+                    "content_type": content_type
                 }
             )
             
             # Create account link for onboarding
             account_link = stripe.AccountLink.create(
                 account=stripe_account.id,
-                refresh_url=f"{settings.BASE_URL}/onboarding/refresh",
-                return_url=f"{settings.BASE_URL}/onboarding/complete",
-                type="account_onboarding"
+                refresh_url=f"{settings.BASE_URL}/onboarding/refresh/{publisher.id}",
+                return_url=f"{settings.BASE_URL}/dashboard/publisher/{publisher.id}",
+                type="account_onboarding",
+                collection_options={
+                    "fields": "eventually_due"
+                }
             )
             
             # Store Stripe account info
             publisher_stripe = PublisherStripeAccount(
                 publisher_id=publisher.id,
                 stripe_account_id=stripe_account.id,
-                onboarding_complete=False
+                onboarding_complete=False,
+                settings={
+                    "account_link_created": datetime.now(timezone.utc).isoformat(),
+                    "content_type": content_type
+                }
             )
             self.db.add(publisher_stripe)
             self.db.commit()
@@ -94,7 +106,7 @@ class OnboardingService:
                 "publisher_id": str(publisher.id),
                 "session_id": session_id,
                 "onboarding_url": account_link.url,
-                "user_type": "publisher"
+                "stripe_account_id": stripe_account.id
             }
         
         except stripe.error.StripeError as e:
@@ -182,6 +194,32 @@ class OnboardingService:
             logger.error(f"Error during company registration: {e}")
             raise HTTPException(status_code=500, detail="Error during registration")
 
+    async def refresh_account_link(self, publisher_id: str) -> str:
+        """ 
+        Create new account link for publisher whose previous link expired
+        """
+        try:
+            publisher_account = self.db.query(PublisherStripeAccount).filter_by(
+                publisher_id=publisher_id
+            ).first()
+            
+            if not publisher_account:
+                raise HTTPException(status_code=404, detail="Publisher account not found")
+            
+            account_link = stripe.AccountLink.create(
+                account=publisher_account.stripe_account_id,
+                refresh_url=f"{settings.BASE_URL}/onboarding/refresh/{publisher_id}",
+                return_url=f"{settings.BASE_URL}/onboarding/complete/{publisher_id}",
+                type="account_onboarding",
+                collect={"payments": True}
+            )
+            
+            return account_link.url
+        
+        except stripe.error.StripeError as e:
+            logger.error(f"Error refreshing account link: {str(e)}")
+            raise HTTPException(status_code=400, detail=str(e))
+    
     async def complete_publisher_onboarding(self, publisher_id: str) -> Dict:
         """ 
         Complete publisher onboarding process
@@ -193,17 +231,30 @@ class OnboardingService:
 
             if not publisher_account:
                 raise HTTPException(status_code=404, detail="Publisher not found")
+            
+            publisher = self.db.query(Publisher).filter_by(id=publisher_id).first()
+            
+            if not publisher:
+                raise HTTPException(status_code=404, detail="Publisher not found")
 
             # Verify Stripe account status
             stripe_account = stripe.Account.retrieve(publisher_account.stripe_account_id)
             
             publisher_account.onboarding_complete = stripe_account.details_submitted
             publisher_account.payout_enabled = stripe_account.payouts_enabled
+            publisher_account.settings.update({
+                "onboarding_completed_at": datetime.now(timezone.utc).isoformat() if stripe_account.details_submitted else None,
+                "capabilities": stripe_account.capabilities,
+                "requirements": stripe_account.requirements
+            })
             self.db.commit()
 
             return {
                 "onboarding_complete": publisher_account.onboarding_complete,
-                "payout_enabled": publisher_account.payout_enabled
+                "payout_enabled": publisher_account.payout_enabled,
+                "email": publisher.email,
+                "requirements": stripe_account.requirements,
+                "next_steps": None if stripe_account.details_submitted else stripe_account.requirements.currently_due
             }
             
         except Exception as e:

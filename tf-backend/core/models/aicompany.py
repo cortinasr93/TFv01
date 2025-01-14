@@ -17,3 +17,4 @@ class AICompany(Base):
 
     # Add this relationship
     payment_account = relationship("AICompanyPaymentAccount", back_populates="company", uselist=False)
+    access_tokens = relationship("AccessToken", back_populates="company")

@@ -18,6 +18,7 @@ class PublisherStripeAccount(Base):
     current_balance = Column(Float, default=0.0)
     last_payout_at = Column(DateTime, nullable=True)
     payout_schedule = Column(String, default='weekly')  # weekly, monthly, threshold
+    settings = Column(JSONB, default={})
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
