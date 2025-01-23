@@ -1,3 +1,5 @@
+// tf-frontend/app/onboarding/refresh/[publisherId]/page.tsx
+
 'use client';
 
 import { useEffect, useState } from 'react';

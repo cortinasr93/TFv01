@@ -1,4 +1,5 @@
-// app/api/register/ai-company/route.ts
+// tf-frontend/app/api/register/ai-company/route.ts
+
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -16,11 +17,14 @@ export async function POST(request: Request) {
         'Cookie': request.headers.get('cookie') || ''
       },
       body: JSON.stringify({
+        name: body.name,
         company_name: body.companyName,
         email: body.email,
-        password: body.password,
+        // password: body.password,
         website: body.website,
-        billing_email: body.billingEmail || body.email
+        use_cases: body.useCases,
+        message: body.message,
+        onboarding_status: 'waitlist'
       })
     });
 

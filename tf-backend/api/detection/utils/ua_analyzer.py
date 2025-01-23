@@ -1,3 +1,5 @@
+# tf-backend/api/detection/utils/ua_analyzer.py
+
 from typing import Dict
 import ua_parser.user_agent_parser
 from .constants import BOT_INDICATORS, MOBILE_OS

@@ -1,3 +1,5 @@
+# tf-backend/core/models/payment.py
+
 from sqlalchemy import Column, String, Boolean, Float, DateTime, ForeignKey, UUID, Text, Enum, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB

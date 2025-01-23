@@ -1,3 +1,5 @@
+// tf-frontend/public/scripts/trainfair.js
+
 // Frontend code for Publisher websites
 // Monitors bots for TF token; redirects them to TF if no token found
 

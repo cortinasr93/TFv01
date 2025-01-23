@@ -1,4 +1,5 @@
-// app/api/dashboard/[publisherId]/route.ts
+// tf-frontend/app/api/dashboard/publisher/[publisherId]/route.ts
+
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 

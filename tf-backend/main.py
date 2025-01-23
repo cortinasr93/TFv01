@@ -1,3 +1,5 @@
+# tf-backend/main.py
+
 from fastapi import FastAPI, Request, HTTPException, Depends
 from sqlalchemy.orm import Session
 from fastapi.staticfiles import StaticFiles
@@ -12,6 +14,7 @@ from api.dashboard import router as dashboard_router
 from api.onboarding import router as onboarding_router
 from api.contact import router as contact_router
 from api.auth import router as auth_router
+from api.token_metering import router as metering_router
 #from api.payments import router as payments_router
 import logging
 
@@ -46,6 +49,7 @@ app.include_router(onboarding_router)
 app.include_router(auth_router)
 app.include_router(token_router)
 app.include_router(contact_router)
+app.include_router(metering_router)
 
 
 # Root endpoint

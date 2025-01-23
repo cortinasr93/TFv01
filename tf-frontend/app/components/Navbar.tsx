@@ -1,3 +1,5 @@
+// tf-frontend/app/components/Navbar.tsx
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -82,7 +84,7 @@ const Navbar = () => {
               Pricing
             </button>
             <div className="flex gap-4">
-              <Link
+              {/* <Link
                 href="/login"
                 className={`px-4 py-2 rounded-lg border border-transparent ${
                   isScrolled 
@@ -91,7 +93,7 @@ const Navbar = () => {
                 } transition-colors`}
               >
                 Log in
-              </Link>
+              </Link> */}
               <Link
                 href="/register"
                 className="px-4 py-2 rounded-lg bg-[#4a653e] text-white hover:bg-white hover:text-[#4a653e] transition-colors"

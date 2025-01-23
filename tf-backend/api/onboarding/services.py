@@ -1,11 +1,14 @@
+# tf-backend/api/onboarding/services.py
+
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from datetime import datetime, timezone
+from api.access_tokens.services import AccessTokenService
 from core.models.payment import PublisherStripeAccount, AICompanyPaymentAccount
 from core.security import hash_password
-from core.models.publisher import Publisher
-from core.models.aicompany import AICompany
+from core.models.publisher import Publisher, PublisherOnboardingStatus
+from core.models.aicompany import AICompany, CompanyOnboardingStatus
 from core.session import SessionManager
 from core.config import get_settings
 import stripe
@@ -24,9 +27,11 @@ class OnboardingService:
         self,
         name: str,
         email: str,
-        password: str,
+        company_name: str,
+        # password: str,
         website: str,
-        content_type: str
+        content_type: str,
+        message: str = None
     ) -> Dict:
         """ 
         Register a new publisher and initiate Stripe onboarding
@@ -37,19 +42,28 @@ class OnboardingService:
             if existing_publisher:
                 raise HTTPException(status_code=400, detail="Email already registered.")
             
-            hashed_password = hash_password(password)
+            # hashed_password = hash_password(password)
             
             # Create publisher record
             publisher = Publisher(
                 name=name,
                 email=email,
+                company_name=company_name,
                 website=website,
                 content_type=content_type,
-                hashed_password=hashed_password,
+                message=message,
+                onboarding_status=PublisherOnboardingStatus.PENDING,
+                #hashed_password=hashed_password,
+                settings={
+                    "registration_date": datetime.now(timezone.utc).isoformat(),
+                    "initial_content_type": content_type,
+                }
             )
             
             self.db.add(publisher)
             self.db.flush()
+            
+            logger.info(f"Successfully registered publisher: {company_name}")
             
             # Create session for new publisher
             session_id = self.session_manager.create_session({
@@ -120,14 +134,16 @@ class OnboardingService:
 
     async def register_ai_company(
         self,
+        name: str,
         company_name: str,
         email: str,
-        password: str,
+        # password: str,
         website: str,
-        billing_email: Optional[str] = None
+        use_cases: List[str],
+        message: str = None,
     ) -> Dict:
         """
-        Register a new AI company and set up Stripe customer
+        Register a new AI company, set up Stripe customer, create access token
         """
         try:
             logger.info(f"Starting AI company registration for {company_name}")
@@ -138,57 +154,85 @@ class OnboardingService:
                 raise HTTPException(status_code=400, detail="Email already registered")
             
             # Hash password
-            hashed_password = hash_password(password)
+            # hashed_password = hash_password(password)
 
             # Create company record
             company = AICompany(
-                name=company_name,
+                name=name,
+                company_name=company_name,
                 email=email,
                 website=website,
-                hashed_password=hashed_password
+                use_cases=use_cases,
+                message=message,
+                onboarding_status=CompanyOnboardingStatus.PENDING,
+                # hashed_password=hashed_password,
+                metadata={
+                    "registration_date": datetime.now(timezone.utc).isoformat(),
+                    "initial_use_cases": use_cases
+                }
             )
             
             self.db.add(company)
             self.db.flush()
-            logger.info(f"Created AI company record with ID: {company.id}")
+            logger.info(f"Successfully registered AI company: {company_name}")
             
-            # Create session for new AI company
-            session_id = self.session_manager.create_session({
-                "id": str(company.id),
-                "email": company.email,
-                "name": company.name,
-                "user_type": "ai-company"
-            })
-            
-            # Create stripe customer
-            stripe_customer = stripe.Customer.create(
-                email=email,
-                name=company_name,
-                metadata={
-                    "company_id": str(company.id),
-                    "website": website
-                }
-            )
-            # Store payment account info
-            company_payment = AICompanyPaymentAccount(
-                company_id=company.id,
-                stripe_customer_id=stripe_customer.id,
-                billing_email=billing_email or email
-            )
-            self.db.add(company_payment)
-            self.db.commit()
-            logger.info(f"Successfully completed registration for {company_name}")
+            try: 
+                # Create stripe customer
+                stripe_customer = stripe.Customer.create(
+                    email=email,
+                    name=company_name,
+                    metadata={
+                        "company_id": str(company.id),
+                        "website": website
+                    }
+                )
+                
+                # Store payment account info
+                company_payment = AICompanyPaymentAccount(
+                    company_id=company.id,
+                    stripe_customer_id=stripe_customer.id,
+                    billing_email=email
+                )
+                self.db.add(company_payment)
+                self.db.flush()
+                
+                # Create access token
+                token_service = AccessTokenService(self.db)
+                token_result = await token_service.create_company_token(str(company.id))
+                
+                # Create session for new AI company
+                session_id = self.session_manager.create_session({
+                    "id": str(company.id),
+                    "email": company.email,
+                    "name": company.name,
+                    "user_type": "ai-company"
+                })
+                
+                self.db.commit()
+                logger.info(f"Successfully completed registration for {company_name}")
 
-            return {
-                "company_id": str(company.id),
-                "session_id": session_id,
-                "setup_complete": True
-            }
+                return {
+                    "company_id": str(company.id),
+                    "session_id": session_id,
+                    "access_token": token_result.token,
+                    "setup_complete": True
+                }
+            except Exception as inner_e:
+            # If anything fails after company creation but before final commit,
+            # rollback and log the specific error
+                self.db.rollback()
+                logger.error(f"Error during post-company creation setup: {str(inner_e)}")
+                raise HTTPException(
+                    status_code=500, 
+                    detail=f"Error during registration setup: {str(inner_e)}"
+                )
         
         except stripe.error.StripeError as e:
             self.db.rollback()
             logger.error(f"Stripe error during company registration: {e}")
             raise HTTPException(status_code=400, detail=str(e))
+        except HTTPException:
+            raise
         except Exception as e:
             self.db.rollback()
             logger.error(f"Error during company registration: {e}")

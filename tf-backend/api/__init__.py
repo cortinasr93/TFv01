@@ -1,1 +1,1 @@
-from . import detection, dashboard, payments
+from . import detection, dashboard

@@ -1,9 +1,12 @@
+# tf-backend/core/config.py
+
 from pydantic_settings import BaseSettings
 from pydantic import ConfigDict
 from functools import lru_cache
 from typing import Optional
 from dotenv import load_dotenv
 import os
+import secrets
 
 load_dotenv()
 
@@ -15,7 +18,6 @@ class Settings(BaseSettings):
     
     # Base URL
     BASE_URL: str = "http://localhost:3000"
-
 
     # PostgreSQL settings
     POSTGRES_USER: str = "trainfair_app"
@@ -29,6 +31,11 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
     REDIS_PASSWORD: str = "password123"
     REDIS_DB: int = 0
+    
+    # JWT Settings
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", secrets.token_urlsafe(32))
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # Payment-related settings
     STRIPE_SECRET_KEY: Optional[str] = os.getenv("STRIPE_SECRET_KEY")

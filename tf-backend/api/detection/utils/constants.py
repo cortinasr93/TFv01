@@ -1,3 +1,5 @@
+# tf-backend/api/detection/utils/constants.py
+
 """Constants used in bot detection and user agent analysis."""
 
 # Operating systems that indicate mobile devices

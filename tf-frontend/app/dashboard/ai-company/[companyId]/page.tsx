@@ -1,3 +1,5 @@
+// tf-frontend/app/dashboard/ai-company/[companyId]/page.tsx
+
 'use client';
 
 import { useState, useEffect } from 'react';

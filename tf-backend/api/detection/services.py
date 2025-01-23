@@ -1,3 +1,5 @@
+# tf-backend/api/detection/services.py
+
 from fastapi import Request
 from sqlalchemy.orm import Session
 import redis
@@ -191,6 +193,14 @@ class BotDetectorService:
         # 5. Update detection history
         await self._update_detection_history(request, ip, publisher_id, detection_results)
         
+        if not detection_results['is_bot']:
+            return detection_results
+        
+        if len(detection_results['detection_methods']) < 2 or detection_results['confidence_score'] < 0.8:
+            detection_results['is_bot'] = False
+            detection_results['confidence_score'] = 0.0
+            detection_results['detection_methods'] = []
+        
         if detection_results['is_bot']:
             logger.info(f"Request detected as bot with methods: {detection_results['detection_methods']}")
             logger.info(f"Headers present: {headers}")
@@ -234,14 +244,10 @@ class BotDetectorService:
             missing_headers = [header for header in self.BROWSER_HEADERS
                             if header not in headers]
             
-            if len(missing_headers) >= 3:
+            if len(missing_headers) >= 5:
                 results['is_bot'] = True
                 results['confidence_score'] = max(results['confidence_score'], 0.7)
                 results['detection_methods'].append('browser_fingerprint')
-            
-            if 'accept' in headers and 'accept-language' not in headers:
-                results['confidence_score'] = max(results['confidence_score'], 0.6)
-                results['detection_methods'].append('suspicious_headers')
         
         if client_info['is_mobile']:
             if 'sec-ch-ua-mobile' in headers and headers['sec-ch-ua-mobile'] != '?1':

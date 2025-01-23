@@ -1,3 +1,5 @@
+// tf-frontend/app/api/register/publisher/route.ts
+
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -6,11 +8,14 @@ export async function POST(request: Request) {
         console.log('Publisher registration request received:', body);
 
         const registrationData = {
-                name: body.companyName || body.name,
+                name: body.name,
                 email: body.email,
-                password: body.password,
+                company_name: body.companyName,
+                // password: body.password,
                 website: body.website,
                 content_type: body.contentType,
+                message: body.message,
+                onboarding_status: 'waitlist',
                 settings: {
                     description: body.description,
                     content_categories: body.contentCategories,

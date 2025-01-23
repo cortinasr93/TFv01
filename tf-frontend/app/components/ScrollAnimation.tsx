@@ -1,3 +1,5 @@
+// tf-frontend/app/components/ScrollAnimation.tsx
+
 'use client';
 
 import React, { useEffect, useRef } from 'react';

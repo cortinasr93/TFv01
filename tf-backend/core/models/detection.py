@@ -1,3 +1,5 @@
+# tf-backend/core/models/detection.py
+
 from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean
 from datetime import datetime
 from core.database import Base

@@ -1,3 +1,5 @@
+// tf-frontend/app/page.tsx
+
 'use client';
 
 import React from 'react';
@@ -201,8 +203,8 @@ export default function LandingPage() {
                 "Only 3% transaction fee",
                 "Automatic payouts",
               ]}
-              ctaText="Start Earning"
-              ctaHref="/register/publisher"
+              // ctaText="Start Earning"
+              // ctaHref="/register/publisher"
               userType="publisher"
             />
           </ScrollAnimation>
@@ -216,8 +218,8 @@ export default function LandingPage() {
                 "Pay per token",
                 "Simple API integration"
               ]}
-              ctaText="Start Training"
-              ctaHref="/register/ai-company"
+              // ctaText="Start Training"
+              // ctaHref="/register/ai-company"
               userType="ai-company"
             />
           </ScrollAnimation>

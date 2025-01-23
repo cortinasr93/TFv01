@@ -1,3 +1,5 @@
+// tf-frontend/app/components/PricingCard.tsx
+
 'use client';
 
 import React from 'react';
@@ -7,8 +9,8 @@ interface PricingCardProps {
   title: string;
   icon: LucideIcon;
   features: string[];
-  ctaText: string;
-  ctaHref: string;
+  // ctaText: string;
+  // ctaHref: string;
   userType: 'publisher' | 'ai-company';
 }
 
@@ -16,8 +18,8 @@ const PricingCard = ({
   title,
   icon: Icon,
   features,
-  ctaText,
-  ctaHref,
+  // ctaText,
+  // ctaHref,
   userType,
 }: PricingCardProps) => (
   <div className="bg-white rounded-xl p-8 shadow-lg transform hover:scale-105 transition-transform duration-300 h-[420px] flex flex-col justify-between">
@@ -48,12 +50,12 @@ const PricingCard = ({
       ))}
     </ul>
     
-    <a
+    {/* <a
       href={ctaHref}
       className="block w-full py-3 px-4 rounded-lg bg-[#4a653e] text-white hover:bg-[#79a267] transition-colors text-center font-medium mt-auto"
     >
       {ctaText}
-    </a>
+    </a> */}
   </div>
 );
 

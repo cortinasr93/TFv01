@@ -1,3 +1,5 @@
+// tf-frontend/app/privacy/page.tsx
+
 'use client';
 
 import Navbar from '../components/Navbar';

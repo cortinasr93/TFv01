@@ -1,3 +1,5 @@
+# tf-backend/core/models/access_tokens.py
+
 from sqlalchemy import Column, String, DateTime, Boolean, Float, ForeignKey, UUID, Enum as SQLEnum, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
