@@ -17,20 +17,25 @@ class Settings(BaseSettings):
     )
     
     # Base URL
-    BASE_URL: str = "http://localhost:3000"
+    BASE_URL: str = os.getenv("BASE_URL", "http://localhost:3000")
 
-    # PostgreSQL settings
-    POSTGRES_USER: str = "trainfair_app"
-    POSTGRES_PASSWORD: str = "password123"
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_PORT: str = "5432"
-    POSTGRES_DB: str = "trainfair"
+    # AWS RDS PostgreSQL settings
+    DB_HOST: str = os.getenv("DB_HOST", "trainfair-db.crsew4uugrsd.us-east-2.rds.amazonaws.com")
+    DB_PORT: str = os.getenv("DB_PORT", "5432")
+    DB_NAME: str = os.getenv("DB_NAME", "trainfair")
+    DB_USER: str = os.getenv("DB_USER", "trainfair_app")
+    DB_PASSWORD: str = os.getenv("DB_PASSWORD", "")
     
     # Redis settings
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_PASSWORD: str = "password123"
     REDIS_DB: int = 0
+    
+    # AWS Settings
+    AWS_ACCESS_KEY_ID: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY")
+    AWS_REGION: str = os.getenv("AWS_REGION", "us-east-2")
     
     # JWT Settings
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", secrets.token_urlsafe(32))
@@ -45,14 +50,10 @@ class Settings(BaseSettings):
     PAYOUT_THRESHOLD: float = 100.0
     MIN_PAYOUT_AMOUNT: float = 20.0
     
-    AWS_ACCESS_KEY_ID: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY")
-    AWS_REGION: str = os.getenv("AWS_REGION")
-    
     # Database URLs
     @property
     def SQLALCHEMY_DATABASE_URL(self) -> str:
-        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     @property
     def REDIS_URL(self) -> str:
