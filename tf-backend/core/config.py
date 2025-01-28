@@ -76,6 +76,8 @@ class Settings(BaseSettings):
     PAYOUT_THRESHOLD: float = 100.0
     MIN_PAYOUT_AMOUNT: float = 20.0
     
+    ENVIRONMENT: str = "development"
+    
     # Database URLs
     @property
     def SQLALCHEMY_DATABASE_URL(self) -> str:
