@@ -9,12 +9,12 @@ from core.models.payment import PublisherStripeAccount, AICompanyPaymentAccount
 from core.security import hash_password
 from core.models.publisher import Publisher, PublisherOnboardingStatus
 from core.models.aicompany import AICompany, CompanyOnboardingStatus
+from core.logging_config import get_logger, LogOperation
 from core.session import SessionManager
 from core.config import get_settings
 import stripe
-import logging
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 settings = get_settings()
 
 class OnboardingService:
@@ -36,101 +36,126 @@ class OnboardingService:
         """ 
         Register a new publisher and initiate Stripe onboarding
         """
-        try:
-            # Check if publisher already exists
-            existing_publisher = self.db.query(Publisher).filter_by(email=email).first()
-            if existing_publisher:
-                raise HTTPException(status_code=400, detail="Email already registered.")
+        with LogOperation("register_publisher", email=email, company_name=company_name):
+            try:
+                # Check if publisher already exists
+                existing_publisher = self.db.query(Publisher).filter_by(email=email).first()
+                if existing_publisher:
+                    logger.warning("publisher_already_exists", email=email)
+                    raise HTTPException(status_code=400, detail="Email already registered.")
+                
+                # hashed_password = hash_password(password)
+                
+                # Create publisher record
+                publisher = Publisher(
+                    name=name,
+                    email=email,
+                    company_name=company_name,
+                    website=website,
+                    content_type=content_type,
+                    message=message,
+                    onboarding_status=PublisherOnboardingStatus.PENDING,
+                    #hashed_password=hashed_password,
+                    settings={
+                        "registration_date": datetime.now(timezone.utc).isoformat(),
+                        "initial_content_type": content_type,
+                    }
+                )
+                
+                self.db.add(publisher)
+                self.db.flush()
+                
+                logger.info("publisher_record_created", 
+                           publisher_id=str(publisher.id),
+                           company_name=company_name)       
+                         
+                # Create session for new publisher
+                session_id = self.session_manager.create_session({
+                    "id": str(publisher.id),
+                    "email": publisher.email,
+                    "name": publisher.name,
+                    "user_type": "publisher"
+                })
+                try:
+                    stripe_account = stripe.Account.create(
+                        type="express",
+                        country="US",
+                        business_type="company",
+                        email=email,
+                        capabilities={
+                            "transfers": {"requested": True},
+                            "card_payments": {"requested": True}
+                        },
+                        business_profile={
+                            "name": name,
+                            "url": website,
+                        },
+                        metadata={
+                            "publisher_id": str(publisher.id),
+                            "content_type": content_type
+                        }
+                    )
+                    
+                    logger.info("stripe_account_created",
+                              publisher_id=str(publisher.id),
+                              stripe_account_id=stripe_account.id)
+                
+                    # Create account link for onboarding
+                    account_link = stripe.AccountLink.create(
+                        account=stripe_account.id,
+                        refresh_url=f"{settings.BASE_URL}/onboarding/refresh/{publisher.id}",
+                        return_url=f"{settings.BASE_URL}/dashboard/publisher/{publisher.id}",
+                        type="account_onboarding",
+                        collection_options={
+                            "fields": "eventually_due"
+                        }
+                    )
+                
+                    # Store Stripe account info
+                    publisher_stripe = PublisherStripeAccount(
+                        publisher_id=publisher.id,
+                        stripe_account_id=stripe_account.id,
+                        onboarding_complete=False,
+                        settings={
+                            "account_link_created": datetime.now(timezone.utc).isoformat(),
+                            "content_type": content_type
+                        }
+                    )
+                    self.db.add(publisher_stripe)
+                    self.db.commit()
+                    
+                    logger.info("publisher_registration_complete",
+                              publisher_id=str(publisher.id),
+                              stripe_account_id=stripe_account.id)
+                    
+                    return {
+                        "publisher_id": str(publisher.id),
+                        "session_id": session_id,
+                        "onboarding_url": account_link.url,
+                        "stripe_account_id": stripe_account.id
+                    }
             
-            # hashed_password = hash_password(password)
+                except stripe.error.StripeError as e:
+                    self.db.rollback()
+                    logger.error("stripe_error_during_registration",
+                               publisher_id=str(publisher.id),
+                               error=str(e),
+                               error_type=type(e).__name__)
+                    raise HTTPException(status_code=400, detail=str(e))
+                except Exception as e:
+                    self.db.rollback()
+                    logger.error("registration_error",
+                               publisher_id=str(publisher.id),
+                               error=str(e),
+                               exc_info=True)
+                    raise HTTPException(status_code=500, detail="Error during registration")
             
-            # Create publisher record
-            publisher = Publisher(
-                name=name,
-                email=email,
-                company_name=company_name,
-                website=website,
-                content_type=content_type,
-                message=message,
-                onboarding_status=PublisherOnboardingStatus.PENDING,
-                #hashed_password=hashed_password,
-                settings={
-                    "registration_date": datetime.now(timezone.utc).isoformat(),
-                    "initial_content_type": content_type,
-                }
-            )
-            
-            self.db.add(publisher)
-            self.db.flush()
-            
-            logger.info(f"Successfully registered publisher: {company_name}")
-            
-            # Create session for new publisher
-            session_id = self.session_manager.create_session({
-                "id": str(publisher.id),
-                "email": publisher.email,
-                "name": publisher.name,
-                "user_type": "publisher"
-            })
-            
-            stripe_account = stripe.Account.create(
-                type="express",
-                country="US",
-                business_type="company",
-                email=email,
-                capabilities={
-                    "transfers": {"requested": True},
-                    "card_payments": {"requested": True}
-                },
-                business_profile={
-                    "name": name,
-                    "url": website,
-                },
-                metadata={
-                    "publisher_id": str(publisher.id),
-                    "content_type": content_type
-                }
-            )
-            
-            # Create account link for onboarding
-            account_link = stripe.AccountLink.create(
-                account=stripe_account.id,
-                refresh_url=f"{settings.BASE_URL}/onboarding/refresh/{publisher.id}",
-                return_url=f"{settings.BASE_URL}/dashboard/publisher/{publisher.id}",
-                type="account_onboarding",
-                collection_options={
-                    "fields": "eventually_due"
-                }
-            )
-            
-            # Store Stripe account info
-            publisher_stripe = PublisherStripeAccount(
-                publisher_id=publisher.id,
-                stripe_account_id=stripe_account.id,
-                onboarding_complete=False,
-                settings={
-                    "account_link_created": datetime.now(timezone.utc).isoformat(),
-                    "content_type": content_type
-                }
-            )
-            self.db.add(publisher_stripe)
-            self.db.commit()
-
-            return {
-                "publisher_id": str(publisher.id),
-                "session_id": session_id,
-                "onboarding_url": account_link.url,
-                "stripe_account_id": stripe_account.id
-            }
-        
-        except stripe.error.StripeError as e:
-            self.db.rollback()
-            logger.error(f"Stripe error during publisher registration: {e}")
-            raise HTTPException(status_code=400, detail=str(e))
-        except Exception as e:
-            self.db.rollback()
-            logger.error(f"Error during publisher registration: {e}")
-            raise HTTPException(status_code=500, detail="Error during registration")
+            except Exception as e:
+                logger.error("registration_failed",
+                           email=email,
+                           error=str(e),
+                           exc_info=True)
+                raise
 
     async def register_ai_company(
         self,
@@ -145,98 +170,119 @@ class OnboardingService:
         """
         Register a new AI company, set up Stripe customer, create access token
         """
-        try:
-            logger.info(f"Starting AI company registration for {company_name}")
-            
-            # Check for existing company
-            existing_company = self.db.query(AICompany).filter_by(email=email).first()
-            if existing_company:
-                raise HTTPException(status_code=400, detail="Email already registered")
-            
-            # Hash password
-            # hashed_password = hash_password(password)
+        with LogOperation("register_ai_company", email=email, company_name=company_name):
 
-            # Create company record
-            company = AICompany(
-                name=name,
-                company_name=company_name,
-                email=email,
-                website=website,
-                use_cases=use_cases,
-                message=message,
-                onboarding_status=CompanyOnboardingStatus.PENDING,
-                # hashed_password=hashed_password,
-                metadata={
-                    "registration_date": datetime.now(timezone.utc).isoformat(),
-                    "initial_use_cases": use_cases
-                }
-            )
-            
-            self.db.add(company)
-            self.db.flush()
-            logger.info(f"Successfully registered AI company: {company_name}")
-            
-            try: 
-                # Create stripe customer
-                stripe_customer = stripe.Customer.create(
+            try:
+                logger.info("starting_ai_company_registration",
+                          company_name=company_name)
+                
+                # Check for existing company
+                existing_company = self.db.query(AICompany).filter_by(email=email).first()
+                if existing_company:
+                    logger.warning("company_already_exists", email=email)
+                    raise HTTPException(status_code=400, detail="Email already registered")
+                
+                # Hash password
+                # hashed_password = hash_password(password)
+
+                # Create company record
+                company = AICompany(
+                    name=name,
+                    company_name=company_name,
                     email=email,
-                    name=company_name,
+                    website=website,
+                    use_cases=use_cases,
+                    message=message,
+                    onboarding_status=CompanyOnboardingStatus.PENDING,
+                    # hashed_password=hashed_password,
                     metadata={
-                        "company_id": str(company.id),
-                        "website": website
+                        "registration_date": datetime.now(timezone.utc).isoformat(),
+                        "initial_use_cases": use_cases
                     }
                 )
                 
-                # Store payment account info
-                company_payment = AICompanyPaymentAccount(
-                    company_id=company.id,
-                    stripe_customer_id=stripe_customer.id,
-                    billing_email=email
-                )
-                self.db.add(company_payment)
+                self.db.add(company)
                 self.db.flush()
+                logger.info("company_record_created",
+                          company_id=str(company.id))
                 
-                # Create access token
-                token_service = AccessTokenService(self.db)
-                token_result = await token_service.create_company_token(str(company.id))
-                
-                # Create session for new AI company
-                session_id = self.session_manager.create_session({
-                    "id": str(company.id),
-                    "email": company.email,
-                    "name": company.name,
-                    "user_type": "ai-company"
-                })
-                
-                self.db.commit()
-                logger.info(f"Successfully completed registration for {company_name}")
+                try: 
+                    # Create stripe customer
+                    stripe_customer = stripe.Customer.create(
+                        email=email,
+                        name=company_name,
+                        metadata={
+                            "company_id": str(company.id),
+                            "website": website
+                        }
+                    )
+                    
+                    logger.info("stripe_customer_created",
+                              company_id=str(company.id),
+                              stripe_customer_id=stripe_customer.id)
+                    
+                    # Store payment account info
+                    company_payment = AICompanyPaymentAccount(
+                        company_id=company.id,
+                        stripe_customer_id=stripe_customer.id,
+                        billing_email=email
+                    )
+                    self.db.add(company_payment)
+                    self.db.flush()
+                    
+                    # Create access token
+                    token_service = AccessTokenService(self.db)
+                    token_result = await token_service.create_company_token(str(company.id))
+                    
+                    # Create session for new AI company
+                    session_id = self.session_manager.create_session({
+                        "id": str(company.id),
+                        "email": company.email,
+                        "name": company.name,
+                        "user_type": "ai-company"
+                    })
+                    
+                    self.db.commit()
+                    logger.info("ai_company_registration_complete",
+                              company_id=str(company.id),
+                              stripe_customer_id=stripe_customer.id)
 
-                return {
-                    "company_id": str(company.id),
-                    "session_id": session_id,
-                    "access_token": token_result.token,
-                    "setup_complete": True
-                }
-            except Exception as inner_e:
-            # If anything fails after company creation but before final commit,
-            # rollback and log the specific error
+                    return {
+                        "company_id": str(company.id),
+                        "session_id": session_id,
+                        "access_token": token_result.token,
+                        "setup_complete": True
+                    }
+                except Exception as inner_e:
+                # If anything fails after company creation but before final commit,
+                # rollback and log the specific error
+                    self.db.rollback()
+                    logger.error("post_registration_setup_failed",
+                               company_id=str(company.id),
+                               error=str(inner_e),
+                               exc_info=True)
+                    raise HTTPException(
+                        status_code=500, 
+                        detail=f"Error during registration setup: {str(inner_e)}"
+                    )
+            
+            except stripe.error.StripeError as e:
                 self.db.rollback()
-                logger.error(f"Error during post-company creation setup: {str(inner_e)}")
-                raise HTTPException(
-                    status_code=500, 
-                    detail=f"Error during registration setup: {str(inner_e)}"
-                )
-        
-        except stripe.error.StripeError as e:
-            self.db.rollback()
-            logger.error(f"Stripe error during company registration: {e}")
-            raise HTTPException(status_code=400, detail=str(e))
-        except HTTPException:
-            raise
-        except Exception as e:
-            self.db.rollback()
-            logger.error(f"Error during company registration: {e}")
-            raise HTTPException(status_code=500, detail="Error during registration")
+                logger.error("stripe_error_during_registration",
+                           error=str(e),
+                           error_type=type(e).__name__)
+                raise HTTPException(status_code=400, detail=str(e))
+            
+            except HTTPException:
+                raise
+            
+            except Exception as e:
+                self.db.rollback()
+                logger.error("registration_failed",
+                           email=email,
+                           error=str(e),
+                           exc_info=True)
+                raise HTTPException(status_code=500, detail="Error during registration")
 
     async def refresh_account_link(self, publisher_id: str) -> str:
         """ 
@@ -268,39 +314,58 @@ class OnboardingService:
         """ 
         Complete publisher onboarding process
         """
-        try:
-            publisher_account = self.db.query(PublisherStripeAccount).filter_by(
-                publisher_id=publisher_id
-            ).first()
+        with LogOperation("complete_publisher_onboarding", publisher_id=publisher_id):
+            try:
+                publisher_account = self.db.query(PublisherStripeAccount).filter_by(
+                    publisher_id=publisher_id
+                ).first()
 
-            if not publisher_account:
-                raise HTTPException(status_code=404, detail="Publisher not found")
-            
-            publisher = self.db.query(Publisher).filter_by(id=publisher_id).first()
-            
-            if not publisher:
-                raise HTTPException(status_code=404, detail="Publisher not found")
+                if not publisher_account:
+                    logger.error("publisher_account_not_found", publisher_id=publisher_id)
+                    raise HTTPException(status_code=404, detail="Publisher not found")
+                
+                publisher = self.db.query(Publisher).filter_by(id=publisher_id).first()
+                
+                if not publisher:
+                    logger.error("publisher_not_found", publisher_id=publisher_id)
+                    raise HTTPException(status_code=404, detail="Publisher not found")
 
-            # Verify Stripe account status
-            stripe_account = stripe.Account.retrieve(publisher_account.stripe_account_id)
-            
-            publisher_account.onboarding_complete = stripe_account.details_submitted
-            publisher_account.payout_enabled = stripe_account.payouts_enabled
-            publisher_account.settings.update({
-                "onboarding_completed_at": datetime.now(timezone.utc).isoformat() if stripe_account.details_submitted else None,
-                "capabilities": stripe_account.capabilities,
-                "requirements": stripe_account.requirements
-            })
-            self.db.commit()
+                # Verify Stripe account status
+                stripe_account = stripe.Account.retrieve(publisher_account.stripe_account_id)
+                
+                publisher_account.onboarding_complete = stripe_account.details_submitted
+                publisher_account.payout_enabled = stripe_account.payouts_enabled
+                publisher_account.settings.update({
+                    "onboarding_completed_at": datetime.now(timezone.utc).isoformat() if stripe_account.details_submitted else None,
+                    "capabilities": stripe_account.capabilities,
+                    "requirements": stripe_account.requirements
+                })
+                self.db.commit()
+                
+                logger.info("publisher_onboarding_completed",
+                          publisher_id=publisher_id,
+                          stripe_account_id=stripe_account.id,
+                          details_submitted=stripe_account.details_submitted,
+                          payouts_enabled=stripe_account.payouts_enabled)
 
-            return {
-                "onboarding_complete": publisher_account.onboarding_complete,
-                "payout_enabled": publisher_account.payout_enabled,
-                "email": publisher.email,
-                "requirements": stripe_account.requirements,
-                "next_steps": None if stripe_account.details_submitted else stripe_account.requirements.currently_due
-            }
+                return {
+                    "onboarding_complete": publisher_account.onboarding_complete,
+                    "payout_enabled": publisher_account.payout_enabled,
+                    "email": publisher.email,
+                    "requirements": stripe_account.requirements,
+                    "next_steps": None if stripe_account.details_submitted else stripe_account.requirements.currently_due
+                }
+                
+            except stripe.error.StripeError as e:
+                logger.error("stripe_error_completing_onboarding",
+                           publisher_id=publisher_id,
+                           error=str(e),
+                           error_type=type(e).__name__)
+                raise HTTPException(status_code=400, detail=str(e))
             
-        except Exception as e:
-            logger.error(f"Error completing publisher onboarding: {e}")
-            raise HTTPException(status_code=500, detail="Error completing onboarding")   
+            except Exception as e:
+                logger.error("error_completing_onboarding",
+                           publisher_id=publisher_id,
+                           error=str(e),
+                           exc_info=True)
+                raise HTTPException(status_code=500, detail="Error completing onboarding")   

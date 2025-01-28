@@ -26,11 +26,37 @@ class Settings(BaseSettings):
     DB_USER: str = os.getenv("DB_USER", "trainfair_app")
     DB_PASSWORD: str = os.getenv("DB_PASSWORD", "")
     
-    # Redis settings
-    REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
-    REDIS_PASSWORD: str = "password123"
-    REDIS_DB: int = 0
+    # Redis settings (OLD)
+    # REDIS_HOST: str = "localhost"
+    # REDIS_PORT: int = 6379
+    # REDIS_PASSWORD: str = "password123"
+    # REDIS_DB: int = 0
+    
+    # Redis AWS ElastiCache Settings
+    REDIS_PRIMARY_ENDPOINT: str = os.getenv("REDIS_PRIMARY_ENDPOINT", "localhost")
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    REDIS_SSL: bool = os.getenv("REDIS_SSL", "false").lower() == "true"
+    # REDIS_AUTH_TOKEN: Optional[str] = os.getenv("REDIS_AUTH_TOKEN")  # For auth if using Redis AUTH
+    # REDIS_USER: Optional[str] = os.getenv("REDIS_USER")  # For Redis ACLs if used
+    REDIS_TLS_CERT_PATH: Optional[str] = os.getenv("REDIS_TLS_CERT_PATH")  # For SSL/TLS
+    REDIS_CONNECTION_TIMEOUT: int = int(os.getenv("REDIS_CONNECTION_TIMEOUT", "5"))
+    REDIS_SOCKET_TIMEOUT: int = int(os.getenv("REDIS_SOCKET_TIMEOUT", "5"))
+    REDIS_RETRY_ON_TIMEOUT: bool = os.getenv("REDIS_RETRY_ON_TIMEOUT", "true").lower() == "true"
+    REDIS_MAX_CONNECTIONS: int = int(os.getenv("REDIS_MAX_CONNECTIONS", "10"))
+    
+    # Helper method to get Redis connection parameters
+    def get_redis_connection_params(self) -> dict:
+        params = {
+            'host': self.REDIS_PRIMARY_ENDPOINT,
+            'port': self.REDIS_PORT,
+            'ssl': self.REDIS_SSL,
+            'socket_timeout': self.REDIS_SOCKET_TIMEOUT,
+            'socket_connect_timeout': self.REDIS_CONNECTION_TIMEOUT,
+            'retry_on_timeout': self.REDIS_RETRY_ON_TIMEOUT,
+            'max_connections': self.REDIS_MAX_CONNECTIONS
+        }
+        
+        return params
     
     # AWS Settings
     AWS_ACCESS_KEY_ID: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID")
