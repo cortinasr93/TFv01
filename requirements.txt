@@ -10,7 +10,7 @@ pydantic[email]
 
 # Database
 SQLAlchemy==2.0.36
-psycopg2==2.9.10
+psycopg2-binary==2.9.10
 
 # Authentication & Security
 passlib==1.7.4
