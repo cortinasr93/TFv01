@@ -21,7 +21,7 @@ import logging
 
 # Initialize logging
 setup_logging()
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(title="TrainFair Bot Detection System")
@@ -64,7 +64,7 @@ routers = [
 for router, prefix in routers:
     try:
         app.include_router(router)
-        logger.debut(f"Registered router: {prefix}")
+        logger.debug(f"Registered router: {prefix}")
     except Exception as e:
         logger.error(f"Failed to register router: {prefix}", error=str(e), exc_info=True)
         raise 
