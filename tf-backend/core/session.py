@@ -40,7 +40,7 @@ class SessionManager:
                 raise ValueError(f"Missing required key '{key}' in user_data")
 
         session_id = str(uuid.uuid4())
-        session_key = f"session:{session_id}"
+        session_key = f"{{sess}}:session:{session_id}"
         
         session_data = {
             "user_id": str(user_data["id"]),
@@ -63,7 +63,7 @@ class SessionManager:
                 )
                 
                 # Add to user's sessions set
-                user_sessions_key= f"user:{user_data['id']}:sessions"
+                user_sessions_key= f"{{sess}}:user:{user_data['id']}:sessions"
                 pipe.sadd(user_sessions_key, session_id)
                 pipe.expire(user_sessions_key, self.session_duration)
                 
@@ -83,7 +83,7 @@ class SessionManager:
         """ 
         Retrieve and validate a session
         """
-        session_key = f"session:{session_id}"
+        session_key = f"{{sess}}:session:{session_id}"
         logger.info(f"Looking up session: {session_key}")
         
         try: 
@@ -103,7 +103,7 @@ class SessionManager:
                     json.dumps(session)
                 )
                 # Also extend user sessions set expiry
-                user_sessions_key = f"user:{session['user_id']}:sessions"
+                user_sessions_key = f"{{sess}}:user:{session['user_id']}:sessions"
                 pipe.expire(user_sessions_key, self.session_duration)
                 
                 pipe.execute()
@@ -122,7 +122,7 @@ class SessionManager:
         End a user session
         """
         try:
-            session_key = f"session:{session_id}"
+            session_key = f"{{sess}}:session:{session_id}"
             
             # Get session first to get user_id
             session_data = self.redis.get(session_key)
@@ -134,7 +134,7 @@ class SessionManager:
                     # Remove session and update user's sessions set atomically
                     with self.redis.pipeline() as pipe:
                         pipe.delete(session_key)
-                        pipe.srem(f"user:{user_id}:sessions", session_id)
+                        pipe.srem(f"{{sess}}:user:{user_id}:sessions", session_id)
                         pipe.execute()
                         return True
         
@@ -149,7 +149,7 @@ class SessionManager:
         Get all active sessions for a user
         """
         try:
-            user_sessions_key = f"user:{user_id}:sessions"
+            user_sessions_key = f"{{sess}}:user:{user_id}:sessions"
             sessions = []
             
             # Get all session IDs for this user from their set
@@ -162,7 +162,7 @@ class SessionManager:
             with self.redis.pipeline() as pipe:
                 # Queue up all the session gets
                 for session_id in session_ids:
-                    pipe.get(f"session:{session_id}")
+                    pipe.get(f"{{sess}}:session:{session_id}")
                 
                 # Execute pipeline and process results
                 results = pipe.execute()
@@ -197,7 +197,7 @@ class SessionManager:
         Cleanup any expired sessions
         """
         try:
-            pattern = f"session:*"
+            pattern = f"{{sess}}:session:*"
             for key in self.redis.scan_iter(pattern):
                 if self.redis.ttl(key) <= 0:
                     self.redis.delete(key)

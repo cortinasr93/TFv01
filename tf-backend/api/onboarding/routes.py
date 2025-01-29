@@ -7,6 +7,7 @@ from core.middleware import require_publisher
 from .services import OnboardingService
 from pydantic import BaseModel, EmailStr, HttpUrl
 from typing import Optional, Dict, List
+from fastapi.responses import JSONResponse
 import logging
 
 router = APIRouter(prefix="/api/onboarding", tags=["onboarding"])
@@ -50,7 +51,8 @@ async def register_publisher(
         )
         
         logger.info(f"Successfully registered publisher: {registration.company_name}")
-        return result
+        return JSONResponse(content=result)
+    
     except Exception as e:
         logger.error(f"Publisher registration error: {str(e)}")
         raise HTTPException(
