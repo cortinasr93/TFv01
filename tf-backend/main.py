@@ -5,10 +5,13 @@ from sqlalchemy.orm import Session
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 from api.onboarding.services import OnboardingService
 from core.database import engine, get_db
 from core.models import detection, publisher, Base
 from core.logging_config import setup_logging, logging_middleware, get_logger
+from core.config import get_settings
 from api.access_tokens import router as token_router
 from api.detection import router as detection_router
 from api.dashboard import router as dashboard_router
@@ -17,25 +20,52 @@ from api.contact import router as contact_router
 from api.auth import router as auth_router
 from api.token_metering import router as metering_router
 #from api.payments import router as payments_router
-import logging
+
+# Initialize settings
+settings = get_settings()
 
 # Initialize logging
 setup_logging()
 logger = get_logger(__name__)
 
 # Initialize FastAPI app
-app = FastAPI(title="TrainFair Bot Detection System")
+app = FastAPI(
+    title="TrainFair Bot Detection System",
+    root_path="/api",
+    root_path_in_servers=False
+)
+
+class PreflightMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.method == "OPTIONS":
+            response = Response()
+            # Get origin from request headers
+            origin = request.headers.get("origin", "")
+            # Check if origin is allowed
+            if origin in settings.CORS_ORIGINS or origin == settings.FRONTEND_URL:
+                response.headers["Access-Control-Allow-Origin"] = origin
+                response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+                response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Cookie"
+                response.headers["Access-Control-Allow-Credentials"] = "true"
+                response.headers["Access-Control-Max-Age"] = "3600"
+            return response
+        return await call_next(request)
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # In production, replace with specific origins
+    allow_origins=[
+        settings.FRONTEND_URL, # Production frontend
+        "http://localhost:3000" # Development frontend
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Set-Cookie"],
 )
 
-# Logging middleware
+# Custom middlewares
+app.add_middleware(PreflightMiddleware)
 app.middleware("http")(logging_middleware)
 
 try:
@@ -72,6 +102,15 @@ for router, prefix in routers:
 # Root endpoint
 @app.get("/")
 async def root():
+    return {
+        "message": "TrainFair Bot Detection System",
+        "status": "running",
+        "version": "1.0.0"
+    }
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
     try:
         # Check database connection
         db = next(get_db())
@@ -88,7 +127,7 @@ async def root():
     }
     
     logger.info("Health check completed", **status_info)
-    return status_info
+    return status_info        
 
 # Error handling
 @app.exception_handler(HTTPException)

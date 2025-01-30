@@ -1,0 +1,15 @@
+[Unit]
+Description=TrainFair FastAPI Backend
+After=network.target
+
+[Service]
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/home/ec2-user/trainfair/tf-backend
+Environment="PATH=/home/ec2-user/trainfair/tfenv/bin"
+EnvironmentFile=/home/ec2-user/trainfair/tf-backend/.env
+ExecStart=/home/ec2-user/trainfair/tfenv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
