@@ -6,9 +6,9 @@ After=network.target
 User=ec2-user
 Group=ec2-user
 WorkingDirectory=/home/ec2-user/trainfair/tf-backend
-Environment="PATH=/home/ec2-user/trainfair/tfenv/bin"
+Environment="PATH=/home/ec2-user/tfenv/bin"
 EnvironmentFile=/home/ec2-user/trainfair/tf-backend/.env
-ExecStart=/home/ec2-user/trainfair/tfenv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+ExecStart=/home/ec2-user/tfenv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
 Restart=always
 
 [Install]
