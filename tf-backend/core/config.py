@@ -17,7 +17,8 @@ class Settings(BaseSettings):
     )
     
     # API backend URL
-    API_URL: str = os.getenv("BASE_URL", "http://localhost:8000")
+    BASE_URL: str = os.getenv("BASE_URL", "http://localhost:8000")
+    API_URL: str = BASE_URL
     
     # Frontend Application URL
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
