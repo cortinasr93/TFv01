@@ -16,8 +16,11 @@ class Settings(BaseSettings):
         env_file = ".env"
     )
     
-    # Base URL
-    BASE_URL: str = os.getenv("BASE_URL", "http://localhost:3000")
+    # API backend URL
+    API_URL: str = os.getenv("BASE_URL", "http://localhost:3000")
+    
+    # Frontend Application URL
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
     # AWS RDS PostgreSQL settings
     DB_HOST: str = os.getenv("DB_HOST", "trainfair-db.crsew4uugrsd.us-east-2.rds.amazonaws.com")

@@ -103,8 +103,8 @@ class OnboardingService:
                     # Create account link for onboarding
                     account_link = stripe.AccountLink.create(
                         account=stripe_account.id,
-                        refresh_url=f"{settings.BASE_URL}/onboarding/refresh/{publisher.id}",
-                        return_url=f"{settings.BASE_URL}/dashboard/publisher/{publisher.id}",
+                        refresh_url=f"{settings.FRONTEND_URL}/onboarding/refresh/{publisher.id}",
+                        return_url=f"{settings.FRONTEND_URL}/dashboard/publisher/{publisher.id}",
                         type="account_onboarding",
                         collection_options={
                             "fields": "eventually_due"
