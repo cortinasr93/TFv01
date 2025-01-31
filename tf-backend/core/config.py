@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     )
     
     # API backend URL
-    API_URL: str = os.getenv("BASE_URL", "http://localhost:3000")
+    API_URL: str = os.getenv("BASE_URL", "http://localhost:8000")
     
     # Frontend Application URL
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
@@ -102,12 +102,3 @@ def get_settings() -> Settings:
 def get_db_connection_string() -> str:
     settings = get_settings()
     return settings.SQLALCHEMY_DATABASE_URL
-
-def get_redis_connection_params() -> dict:
-    settings = get_settings()
-    return {
-        'host': settings.REDIS_HOST,
-        'port': settings.REDIS_PORT,
-        'password': settings.REDIS_PASSWORD,
-        'db': settings.REDIS_DB
-    }

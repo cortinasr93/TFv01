@@ -298,8 +298,8 @@ class OnboardingService:
             
             account_link = stripe.AccountLink.create(
                 account=publisher_account.stripe_account_id,
-                refresh_url=f"{settings.BASE_URL}/onboarding/refresh/{publisher_id}",
-                return_url=f"{settings.BASE_URL}/onboarding/complete/{publisher_id}",
+                refresh_url=f"{settings.FRONTEND_URL}/onboarding/refresh/{publisher_id}",
+                return_url=f"{settings.FRONTEND_URL}/onboarding/complete/{publisher_id}",
                 type="account_onboarding",
                 collect={"payments": True}
             )
