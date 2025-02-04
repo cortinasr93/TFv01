@@ -12,11 +12,11 @@ interface RouteParams {
 
 export async function GET(
     _request: NextRequest, 
-    context: Promise<RouteParams>
+    context: RouteParams
 ) {
     try {
-        const { params } = await context;
-        
+        const { params } = context;
+
         // Get session cookie
         const cookieStore = await cookies();
         const sessionId = cookieStore.get('session_id');
