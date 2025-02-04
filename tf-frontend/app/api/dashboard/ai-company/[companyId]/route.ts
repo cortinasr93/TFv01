@@ -4,13 +4,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { API_URL } from '@/config/api';
 
-type Props = {
-    params: { companyId: string }
-  };
+type RouteContext = {
+    params: { 
+        companyId: string 
+    }
+  }
 
 export async function GET(
     _request: NextRequest, 
-    { params }:  Props
+    context: RouteContext
 ) {
     try {
         // Get session cookie
@@ -23,7 +25,7 @@ export async function GET(
         
         // Forward request to backend with session cookie
         const response = await fetch(
-            `${API_URL}/api/dashboard/ai-company/${params.companyId}`, 
+            `${API_URL}/api/dashboard/ai-company/${context.params.companyId}`, 
             {
                 headers: {
                     'Cookie': `session_id=${sessionId}`,
