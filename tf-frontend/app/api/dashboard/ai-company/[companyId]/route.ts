@@ -4,9 +4,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { API_URL } from '@/config/api';
 
+type Params = { params: { companyId: string } };
+
 export async function GET(
     _request: NextRequest, 
-    context: { params : { companyId: string } }
+    context: Params
 ) {
     try {
         // Get session cookie
