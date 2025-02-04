@@ -4,12 +4,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { API_URL } from '@/config/api';
 
-type RouteParams = {
-    params: { 
-        companyId: string 
-    };
-};
-
 export async function GET(
     _request: NextRequest, 
     { params }: { params: { companyId: string } }
