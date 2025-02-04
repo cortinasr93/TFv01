@@ -12,7 +12,7 @@ type RouteParams = {
 
 export async function GET(
     _request: NextRequest, 
-    { params }: RouteParams
+    { params }: { params: { companyId: string } }
 ) {
     try {
         // Get session cookie
@@ -28,7 +28,7 @@ export async function GET(
             `${API_URL}/api/dashboard/ai-company/${params.companyId}`, 
             {
                 headers: {
-                    'Cookie': `session_id=${sessionId.value}`,
+                    'Cookie': `session_id=${sessionId}`,
                     'Content-Type': 'application/json'
                 }
             }
