@@ -4,11 +4,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { API_URL } from '@/config/api';
 
+interface RouteParams {
+    params: {
+        companyId: string;
+    }
+}
+
 export async function GET(
     _request: NextRequest, 
-    { params }: { params: { companyId: string } }
+    context: Promise<RouteParams>
 ) {
     try {
+        const { params } = await context;
+        
         // Get session cookie
         const cookieStore = await cookies();
         const sessionId = cookieStore.get('session_id');
