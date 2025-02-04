@@ -1,13 +1,19 @@
 // tf-frontend/app/api/dashboard/ai-company/[companyId]/route.ts
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { API_URL } from '@/config/api';
 
-interface Props {
-    params: { companyId: string }
+type RouteParams = {
+    params: { 
+        companyId: string 
+    };
 };
 
-export async function GET(request: Request, { params }: Props) {
+export async function GET(
+    _request: NextRequest, 
+    { params }: RouteParams
+) {
     try {
         // Get session cookie
         const cookieStore = await cookies();
@@ -18,12 +24,15 @@ export async function GET(request: Request, { params }: Props) {
         }
         
         // Forward request to backend with session cookie
-        const response = await fetch(`http://localhost:8000/api/dashboard/ai-company/${params.companyId}`, {
-            headers: {
-                'Cookie': `session_id=${sessionId.value}`,
-                'Content-Type': 'application/json'
+        const response = await fetch(
+            `${API_URL}/api/dashboard/ai-company/${params.companyId}`, 
+            {
+                headers: {
+                    'Cookie': `session_id=${sessionId.value}`,
+                    'Content-Type': 'application/json'
+                }
             }
-        });
+        );
 
         if (!response.ok) {
             const error = await response.json();
