@@ -4,7 +4,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { API_URL } from '@/config/api';
 
-export async function GET(_request: NextRequest, { params }: { params: { companyId: string } }) {
+type Props = {
+    params: {
+        companyId: string
+    }
+}
+
+export async function GET(
+    request: NextRequest, 
+    { params }: Props
+): Promise<NextResponse> {
     try {
 
         // Get session cookie
@@ -20,7 +29,7 @@ export async function GET(_request: NextRequest, { params }: { params: { company
             `${API_URL}/api/dashboard/ai-company/${params.companyId}`, 
             {
                 headers: {
-                    'Cookie': `session_id=${sessionId}`,
+                    'Cookie': `session_id=${sessionId.value}`,
                     'Content-Type': 'application/json'
                 }
             }
