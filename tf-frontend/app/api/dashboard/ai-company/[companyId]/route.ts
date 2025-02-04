@@ -6,7 +6,7 @@ import { API_URL } from '@/config/api';
 
 export async function GET(
     _request: NextRequest, 
-    { params }: { params: { companyId: string } }
+    context: { params : { companyId: string } }
 ) {
     try {
         // Get session cookie
@@ -19,7 +19,7 @@ export async function GET(
         
         // Forward request to backend with session cookie
         const response = await fetch(
-            `${API_URL}/api/dashboard/ai-company/${params.companyId}`, 
+            `${API_URL}/api/dashboard/ai-company/${context.params.companyId}`, 
             {
                 headers: {
                     'Cookie': `session_id=${sessionId}`,
