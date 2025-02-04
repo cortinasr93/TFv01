@@ -57,7 +57,7 @@ export default function LandingPage() {
                 <p className="text-lg text-[#4a653e]">
                 Unlock high-quality training data and search-ready content from verified publishers 
                 through our streamlined marketplace. TrainFair&apos;s transparent pricing, seamless 
-                integration, and automated compliance allows you to power accurate, 
+                integration, and automated compliance gives you to power to build accurate, 
                 ethical AI-driven search experiences.
                 </p>
               </div>
