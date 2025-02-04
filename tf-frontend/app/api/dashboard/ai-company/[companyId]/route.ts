@@ -3,8 +3,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { API_URL } from '@/config/api';
-import type { Route } from 'next';
-
 
 export async function GET(
     _request: NextRequest, 
