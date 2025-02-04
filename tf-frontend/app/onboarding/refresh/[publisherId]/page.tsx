@@ -5,15 +5,39 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function OnboardingRefresh({ params }: { params: { publisherId: string } }) {
+interface PageProps {
+  params: Promise<{ publisherId: string }>
+}
+
+export default function OnboardingRefresh(props: PageProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [publisherId, setPublisherId] = useState<string | null>(null);
+
+  // Handle async params
+  useEffect(() => {
+    const initParams = async () => {
+        try {
+            const { publisherId } = await props.params;
+            setPublisherId(publisherId);
+        } catch (err) {
+            console.error('Error getting params:', err);
+            setError('Invalid publisher ID');
+            setIsLoading(false);
+        }
+    };
+
+    initParams();
+}, [props.params]);
 
   useEffect(() => {
+
+    if (!publisherId) return;
+
     const refreshLink = async () => {
       try {
-        const response = await fetch(`/api/onboarding/publisher/${params.publisherId}/refresh-link`, {
+        const response = await fetch(`/api/onboarding/publisher/${publisherId}/refresh-link`, {
           method: 'POST',
           credentials: 'include'
         });
@@ -40,7 +64,7 @@ export default function OnboardingRefresh({ params }: { params: { publisherId: s
     };
 
     refreshLink();
-  }, [params.publisherId, router]);
+  }, [publisherId, router]);
 
   if (isLoading) {
     return (

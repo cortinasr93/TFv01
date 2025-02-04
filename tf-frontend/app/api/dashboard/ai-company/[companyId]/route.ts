@@ -4,18 +4,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { API_URL } from '@/config/api';
 
-type Props = {
-    params: {
-        companyId: string
-    }
-}
+type Params = Promise<{ companyId: string }>
 
 export async function GET(
     request: NextRequest, 
-    { params }: Props
+    props: { params: Params }
 ): Promise<NextResponse> {
     try {
 
+        const params = await props.params;
+        
         // Get session cookie
         const cookieStore = await cookies();
         const sessionId = cookieStore.get('session_id');

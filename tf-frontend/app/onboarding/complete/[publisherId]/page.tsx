@@ -5,18 +5,34 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-interface Props {
-    params: { publisherId: string }
+interface PageProps {
+    params: Promise<{ publisherId: string }>
 }
 
-export default function OnboardingComplete({ params }: Props) {
+export default function OnboardingComplete(props: PageProps) {
 
-    const publisherId = params.publisherId;
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const [status, setStatus] = useState<'verifying' | 'completed' | 'error'>('verifying');
+    const [publisherId, setPublisherId] = useState<string | null>(null);
 
     useEffect(() => {
+      const initParams = async () => {
+        try {
+          const { publisherId } = await props.params;
+          setPublisherId(publisherId);
+        } catch (err) {
+          console.error('Error getting params:', err);
+          setError('Invalid publisher ID');
+          setStatus('error');
+        }
+      };
+      initParams();
+    }, [props.params]);
+    
+    useEffect(() => {
+        if (!publisherId) return;
+        
         const completeOnboarding = async () => {
             try {
                 console.log('Starting onboarding completion for publisher:', publisherId);

@@ -1,14 +1,17 @@
 // tf-frontend/app/api/dashboard/publisher/[publisherId]/route.ts
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-type Props = {
-  params: { publisherId: string }
-};
+type Params = Promise<{ publisherId: string }>
 
-export async function GET(request: Request, { params }: Props) {
+export async function GET(
+  request: NextRequest, 
+  props: { params : Params }
+): Promise<NextResponse> {
   try {
+    
+    const params = await props.params;
     
     // Get session cookie
     const cookieStore = await cookies();
