@@ -3,7 +3,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
 import Navbar from '../../components/Navbar';
@@ -35,7 +35,7 @@ interface FormData {
 }
 
 export default function AICompanyRegistration() {
-  const router = useRouter();
+  // const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -163,7 +163,7 @@ export default function AICompanyRegistration() {
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Thank You for Joining TrainFair!</h2>
               <p className="text-gray-600 mb-6">
-                We're excited to help you access high-quality training data. Our team will reach out with next steps.
+                We&apos;re excited to help you access high-quality training data. Our team will reach out with next steps.
               </p>
               <Link 
                 href="/"

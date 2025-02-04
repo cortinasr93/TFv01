@@ -207,7 +207,7 @@ export default function PublisherRegistration() {
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Thank You for Joining TrainFair!</h2>
                 <p className="text-gray-600 mb-6">
-                  We're excited to help you monetize your content. Our team will reach out with next steps.
+                  We&apos;re excited to help you monetize your content. Our team will reach out with next steps.
                 </p>
                 <Link 
                   href="/"

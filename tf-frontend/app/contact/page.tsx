@@ -3,7 +3,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Send, Mail } from 'lucide-react';
+import { Send } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -66,7 +66,7 @@ export default function ContactPage() {
               Get in Touch
             </h1>
             <p className="text-xl text-[#4a653e]">
-              Have questions about TrainFair? We're here to help publishers and AI companies connect and thrive.
+              Have questions about TrainFair? We&apos;re here to help publishers and AI companies connect and thrive.
             </p>
           </div>
 
@@ -77,7 +77,7 @@ export default function ContactPage() {
                   <Send className="w-8 h-8 text-green-600" />
                 </div>
                 <h2 className="text-2xl font-semibold text-[#1c2617] mb-2">Message Sent!</h2>
-                <p className="text-[#4a653e]">We'll get back to you as soon as possible.</p>
+                <p className="text-[#4a653e]">We&apos;ll get back to you as soon as possible.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">

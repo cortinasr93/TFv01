@@ -3,7 +3,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+//import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -16,7 +16,7 @@ interface FormData {
 }
 
 export default function Login() {
-  const router = useRouter();
+  //const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   

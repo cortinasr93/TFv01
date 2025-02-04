@@ -11,7 +11,7 @@ interface PricingCardProps {
   features: string[];
   // ctaText: string;
   // ctaHref: string;
-  userType: 'publisher' | 'ai-company';
+  // userType: 'publisher' | 'ai-company';
 }
 
 const PricingCard = ({
@@ -20,7 +20,7 @@ const PricingCard = ({
   features,
   // ctaText,
   // ctaHref,
-  userType,
+  // userType,
 }: PricingCardProps) => (
   <div className="bg-white rounded-xl p-8 shadow-lg transform hover:scale-105 transition-transform duration-300 h-[420px] flex flex-col justify-between">
     <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 rounded-full bg-[#e9efe6]">

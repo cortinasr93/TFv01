@@ -26,7 +26,7 @@ export default function TermsPage() {
               <section className="space-y-4">
                 <h2 className="text-2xl font-semibold text-[#1c2617]">1. Introduction</h2>
                 <p className="text-gray-700">
-                  Welcome to TrainFair. These Terms and Conditions govern your use of TrainFair's platform 
+                  Welcome to TrainFair. These Terms and Conditions govern your use of TrainFair&apos;s platform 
                   and services. By using our platform, you agree to these terms in their entirety. If you 
                   disagree with any part of these terms, you may not use our services.
                 </p>

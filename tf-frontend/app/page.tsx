@@ -4,8 +4,7 @@
 
 import React from 'react';
 import { 
-  Shield, Database, BarChart2, Newspaper, DollarSign, Bot, 
-  Server, Lock, Zap, FileText, Award, Search, Cpu 
+  Shield, Database, BarChart2, Newspaper, DollarSign, Lock, Zap, FileText, Award, Cpu 
 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import ScrollAnimation from './components/ScrollAnimation';
@@ -49,7 +48,7 @@ export default function LandingPage() {
                 <h2 className="text-xl font-semibold text-[#1c2617] mb-3">Publishers</h2>
                 <p className="text-lg text-[#4a653e]">
                   As AI-enhanced search transforms how people find information, your 
-                  traffic—and ad revenue—are at risk. Get paid directly when AI companies 
+                  traffic&mdash;and ad revenue&mdash;are at risk. Get paid directly when AI companies 
                   use your content, creating a sustainable revenue stream for the AI era.
                 </p>
               </div>
@@ -57,7 +56,7 @@ export default function LandingPage() {
                 <h2 className="text-xl font-semibold text-[#1c2617] mb-3">AI Companies</h2>
                 <p className="text-lg text-[#4a653e]">
                 Unlock high-quality training data and search-ready content from verified publishers 
-                through our streamlined marketplace. TrainFair's transparent pricing, seamless 
+                through our streamlined marketplace. TrainFair&apos;s transparent pricing, seamless 
                 integration, and automated compliance empowers you to power accurate, 
                 ethical AI-driven search experiences.
                 </p>
@@ -71,7 +70,7 @@ export default function LandingPage() {
               href="/register"
               className="px-8 py-4 rounded-lg bg-[#e9efe6] text-[#1c2617] hover:bg-[#b1c9a7] transition-colors font-medium"
             >
-              Get started
+              Sign Up
             </a>
             <a
               href="/contact"
@@ -205,7 +204,7 @@ export default function LandingPage() {
               ]}
               // ctaText="Start Earning"
               // ctaHref="/register/publisher"
-              userType="publisher"
+              //userType="publisher"
             />
           </ScrollAnimation>
             
@@ -220,7 +219,7 @@ export default function LandingPage() {
               ]}
               // ctaText="Start Training"
               // ctaHref="/register/ai-company"
-              userType="ai-company"
+              //userType="ai-company"
             />
           </ScrollAnimation>
         </div>

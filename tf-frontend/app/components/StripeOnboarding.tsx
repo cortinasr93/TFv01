@@ -72,7 +72,7 @@ const StripeOnboarding: React.FC<StripeOnboardingProps> = ({ publisherId, onboar
         } else {
             checkOnboardingStatus();
         }
-    }, [onboardingUrl, publisherId, loginCredentials, router]);
+    }, [onboardingUrl, publisherId, loginCredentials, router, isCompletingSetup]);
 
     const handleRefresh = async () => {
         try {
@@ -131,7 +131,7 @@ const StripeOnboarding: React.FC<StripeOnboardingProps> = ({ publisherId, onboar
         <div className="text-center py-12">
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">Complete Your Account Setup</h2>
           <p className="text-gray-600 mb-6">
-            You'll be redirected to Stripe to complete your account setup and enable payments.
+            You&apos;ll be redirected to Stripe to complete your account setup and enable payments.
           </p>
           <button
             onClick={() => window.location.href = onboardingUrl}
