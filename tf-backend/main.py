@@ -35,36 +35,86 @@ app = FastAPI(
     root_path_in_servers=False
 )
 
+@app.middleware("http")
+async def cors_debug_middleware(request: Request, call_next):
+    logger.debug(f"Request origin: {request.headers.get('origin')}")
+    logger.debug(f"Request method: {request.method}")
+    logger.debug(f"Request headers: {dict(request.headers)}")
+    
+    response = await call_next(request)
+    
+    logger.debug(f"CORS response headers: {dict(response.headers)}")
+    return response
+
 class PreflightMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         if request.method == "OPTIONS":
-            response = Response()
-            # Get origin from request headers
-            origin = request.headers.get("origin", "")
-            # Check if origin is allowed
-            if origin in settings.CORS_ORIGINS or origin == settings.FRONTEND_URL:
-                response.headers["Access-Control-Allow-Origin"] = origin
-                response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-                response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Cookie"
-                response.headers["Access-Control-Allow-Credentials"] = "true"
-                response.headers["Access-Control-Max-Age"] = "3600"
-            return response
+            try:
+                response = Response()
+                # Get origin from request headers
+                origin = request.headers.get("origin", "")
+                allowed_origins = [
+                    settings.FRONTEND_URL,
+                    f"https://www.{settings.FRONTEND_URL.replace('https://', '')}",
+                    "http://localhost:3000",
+                    "http://127.0.0.1:3000"
+                ] if settings.FRONTEND_URL else [
+                    "http://localhost:3000",
+                    "http://127.0.0.1:3000"
+                ]
+                # Check if origin is allowed
+                if origin in allowed_origins:
+                    logger.debug(f"Origin {origin} is allowed")
+                    response.headers["Access-Control-Allow-Origin"] = origin
+                    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+                    response.headers["Access-Control-Allow-Headers"] = (
+                        "Content-Type, Authorization, Accept, Origin, "
+                        "X-Requested-With, X-CSRF-Token, Cookie"
+                    )
+                    response.headers["Access-Control-Allow-Credentials"] = "true"
+                    response.headers["Access-Control-Max-Age"] = "3600"
+                else:
+                    logger.warning(f"Origin {origin} not in allowed origins: {allowed_origins}")
+                return response
+            except Exception as e:
+                logger.error(f"Error in preflight handling: {str(e)}", exc_info=True)
+                raise
         return await call_next(request)
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        settings.FRONTEND_URL, # Production frontend
-        "http://localhost:3000" # Development frontend
+        settings.FRONTEND_URL,  # From your existing settings
+        f"https://www.{settings.FRONTEND_URL.replace('https://', '')}",  # www subdomain
+        "http://localhost:3000",  # Local development
+        "http://127.0.0.1:3000",  # Alternative local development
+    ] if settings.FRONTEND_URL else [
+        "http://localhost:3000",  # Fallback for development
+        "http://127.0.0.1:3000"
     ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["Set-Cookie"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+        "X-CSRF-Token",
+        "Cookie"
+    ],
+    expose_headers=[
+        "Set-Cookie",
+        "Content-Type",
+        "Authorization",
+        "Access-Control-Allow-Credentials"
+    ],
+    max_age=3600,
 )
 
 # Custom middlewares
+app.middleware("http")(cors_debug_middleware)
 app.add_middleware(PreflightMiddleware)
 app.middleware("http")(logging_middleware)
 

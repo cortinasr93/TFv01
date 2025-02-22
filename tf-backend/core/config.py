@@ -21,8 +21,16 @@ class Settings(BaseSettings):
     API_URL: str = BASE_URL
     
     # Frontend Application URL
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    FRONTEND_URL: Optional[str] = None
 
+    # CORS Settings
+    CORS_ORIGINS: list = [
+        "https://trainfair.io",  # Production
+        "https://www.trainfair.io",  # www subdomain
+        "http://localhost:3000",  # Local development
+        "http://127.0.0.1:3000",  # Alternative local development
+    ]
+    
     # AWS RDS PostgreSQL settings
     DB_HOST: str = os.getenv("DB_HOST", "trainfair-db.crsew4uugrsd.us-east-2.rds.amazonaws.com")
     DB_PORT: str = os.getenv("DB_PORT", "5432")

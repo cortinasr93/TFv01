@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { fetchApi } from '@/utils/api';
 
 interface PageProps {
   params: Promise<{ publisherId: string }>
@@ -37,9 +38,10 @@ export default function OnboardingRefresh(props: PageProps) {
 
     const refreshLink = async () => {
       try {
-        const response = await fetch(`/api/onboarding/publisher/${publisherId}/refresh-link`, {
+        const response = await fetchApi(`/onboarding/publisher/${publisherId}/refresh-link`, {
           method: 'POST',
-          credentials: 'include'
+          credentials: 'include',
+          cache: 'no-store'
         });
 
         if (!response.ok) {

@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { fetchApi } from '@/utils/api';
 
 interface PageProps {
     params: Promise<{ publisherId: string }>
@@ -38,18 +39,19 @@ export default function OnboardingComplete(props: PageProps) {
                 console.log('Starting onboarding completion for publisher:', publisherId);
 
                 // Verify onboarding completion
-                const response = await fetch(`/api/onboarding/publisher/${publisherId}/complete`, {
+                const response = await fetchApi(`/onboarding/publisher/${publisherId}/complete`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    cache: 'no-store'
                 });
 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Completion error:', errorText);
-                    throw new Error(errorText || 'Failed to verify onboarding completion');
+                    const errorData = await response.json();
+                    console.error('Completion error:', errorData);
+                    throw new Error(errorData.detail || 'Failed to verify onboarding completion');
                 }
                 
                 const data = await response.json();
@@ -63,7 +65,7 @@ export default function OnboardingComplete(props: PageProps) {
 
                 // After successful completion, try to perform automatic login
               
-                const loginResponse = await fetch('/api/login', {
+                const loginResponse = await fetchApi('/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -73,7 +75,8 @@ export default function OnboardingComplete(props: PageProps) {
                         password: data.password,
                         userType: 'publisher'
                     }),
-                    credentials: 'include' 
+                    credentials: 'include',
+                    cache: 'no-store' 
                 });
 
                 if (loginResponse.ok) {

@@ -1,6 +1,8 @@
 // tf-frontend/app/api/register/ai-company/route.ts
 
 import { NextResponse } from 'next/server';
+import { fetchApi } from '@/utils/api';
+import { ApiError } from '@/utils/api';
 
 export async function POST(request: Request) {
   try {
@@ -9,36 +11,21 @@ export async function POST(request: Request) {
     // Log the incoming request data
     console.log('Registration request received:', body);
 
-    const response = await fetch('http://localhost:8000/api/onboarding/ai-company', {
+    const registrationData = {
+      name: body.name,
+      company_name: body.companyName,
+      email: body.email,
+      // password: body.password,
+      website: body.website,
+      use_cases: body.useCases,
+      message: body.message,
+      onboarding_status: 'waitlist'
+    };
+    
+    const response = await fetchApi('/api/onboarding/ai-company', {
       method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': request.headers.get('cookie') || ''
-      },
-      body: JSON.stringify({
-        name: body.name,
-        company_name: body.companyName,
-        email: body.email,
-        // password: body.password,
-        website: body.website,
-        use_cases: body.useCases,
-        message: body.message,
-        onboarding_status: 'waitlist'
-      })
+      body: JSON.stringify(registrationData)
     });
-
-    if (!response.ok) {
-        const text = await response.text();
-        let errorMessage;
-        try {
-            const errorData = JSON.parse(text);
-            errorMessage = errorData.detail;
-        } catch {
-            errorMessage = text;
-        }
-        throw new Error(errorMessage);
-    }
 
     const data = await response.json();
 
@@ -46,21 +33,24 @@ export async function POST(request: Request) {
     const nextResponse = NextResponse.json(data);
 
     // Set session cookie
-    nextResponse.cookies.set({
-        name: 'session_id',
-        value: data.session_id,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/'
-    });
+    if (data.session_id) {
+      nextResponse.cookies.set({
+          name: 'session_id',
+          value: data.session_id,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/'
+      });
+    }
 
     return nextResponse;
 
   } catch (error) {
+    console.error('AI Company registration error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Registration failed' },
-      { status: 500 }
+      { status: error instanceof ApiError ? error.status : 500 }
     );
   }
 }

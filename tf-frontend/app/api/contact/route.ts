@@ -1,23 +1,18 @@
 // tf-frontend/app/api/contact/route.ts
 
 import { NextResponse } from 'next/server';
+import { fetchApi } from '@/utils/api';
+import { ApiError } from '@/utils/api';
 
 export async function POST(request: Request) {
     try {
         const data = await request.json();
 
         // Forward request to backend
-        const response = await fetch('http://localhost:8000/api/contact', {
+        const response = await fetchApi('/api/contact', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
             body: JSON.stringify(data)
         });
-
-        if (!response.ok) {
-            throw new Error('Failed to send message')
-        }
 
         const result = await response.json();
         return NextResponse.json(result);
@@ -25,8 +20,8 @@ export async function POST(request: Request) {
     } catch (error) {
         console.error('Error in contact API route:', error);
         return NextResponse.json(
-            { error: 'Failed to send message' },
-            { status: 500 }
+            { error: error instanceof ApiError ? error.message : 'Failed to send message' },
+            { status: error instanceof ApiError ? error.status : 500 }
         );
     }
 }

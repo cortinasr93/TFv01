@@ -2,12 +2,21 @@
 
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
+import { fetchApi } from '@/utils/api';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     console.log('Login attempt:', { email: body.email, userType: body.userType });
 
+    // Input validation
+    if (!body.email || !body.userType) {
+      return NextResponse.json(
+        { error: 'Email and user type are required'},
+        { status: 400 }
+      );
+    }
+    
     // Log full request being sent
     const requestBody = {
         email: body.email,
@@ -17,43 +26,35 @@ export async function POST(request: Request) {
     console.log('Sending request to backend:', requestBody); 
 
     // Send login request to the backend
-    const response = await fetch('http://localhost:8000/api/auth/login', {
+    const response = await fetchApi('/auth/login', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: body.email,
-        password: body.password,
-        user_type: body.userType
-      })
+      body: JSON.stringify(requestBody),
+      cache: 'no-store' // Prevent caching of login requests
     });
 
-    const responseText = await response.text()
-    console.log('Login response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers));
-    console.log('Login response text:', responseText);
-
     if (!response.ok) {
-        throw new Error(responseText);
+      // Handle specific error cases
+      const errorData = await response.json();
+      const errorMessage = errorData.detail || 'Login failed';
+      throw new Error(errorMessage);
     }
 
-    // Parse response data
-    const data = JSON.parse(responseText);
+    const data = await response.json();
+
     console.log('Session ID received:', data.session_id);
     console.log('User ID received:', data.user_id);
 
     // Get the host from the headers
-    const headersList = await headers();
-    const host = headersList.get('host') || 'localhost:3000';
     const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-
-    // Construct redirect URL based on user type
     const dashboardPath = body.userType === 'publisher'
-        ? `/dashboard/publisher/${data.user_id}`
-        : `/dashboard/ai-company/${data.user_id}`;
+      ? `/dashboard/publisher/${data.user_id}`
+      : `/dashboard/ai-company/${data.user_id}`;
+
     
     // Construct absolute URL for redirect
-    const redirectUrl = `${protocol}://${host}${dashboardPath}`;
+    const redirectUrl = `${protocol}://${request.headers.get('host')}${dashboardPath}`;
     console.log('Redirecting to:', redirectUrl);
 
     // Create response with redirect
@@ -66,16 +67,24 @@ export async function POST(request: Request) {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        path: '/'
+        path: '/',
+        maxAge: 60 * 30 // 30 minutes, matching backend duration
     });
 
     return nextResponse;
 
   } catch (error) {
     console.error('Login error:', error);
+    
+    // Enhanced error handling
+    const statusCode = error instanceof Response ? error.status : 401;
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : 'Authentication failed. Please check your credentials and try again.';
+
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Login failed' },
-      { status: 401 }
+      { error: errorMessage },
+      { status: statusCode }
     );
   }
 }
