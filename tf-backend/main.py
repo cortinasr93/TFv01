@@ -31,8 +31,8 @@ logger = get_logger(__name__)
 # Initialize FastAPI app
 app = FastAPI(
     title="TrainFair Bot Detection System",
-    root_path="/api",
-    root_path_in_servers=False
+    #root_path="/api",
+    #root_path_in_servers=False
 )
 
 @app.middleware("http")
