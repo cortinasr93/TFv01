@@ -179,6 +179,14 @@ async def health_check():
     logger.info("Health check completed", **status_info)
     return status_info        
 
+# Temporary checking routes
+@app.get("/routes")
+def get_routes():
+    routes = []
+    for route in app.routes:
+        routes.append(f"{route.methods} {route.path}")
+    return {"routes": routes}
+
 # Error handling
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
