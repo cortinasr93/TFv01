@@ -134,6 +134,9 @@ export default function PublisherRegistration() {
     setLoading(true);
     
     try {
+        console.log('Sending registration request to:', `${process.env.NEXT_PUBLIC_API_URL}/api/onboarding/publisher`);
+        console.log('With data:', formData);
+
         const response = await fetch('/api/register/publisher', {
             method: 'POST',
             headers: {

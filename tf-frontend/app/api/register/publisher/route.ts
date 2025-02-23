@@ -7,6 +7,7 @@ import { ApiError } from '@/utils/api';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
+
         console.log('Publisher registration request received:', body);
 
         const registrationData = {
@@ -28,10 +29,18 @@ export async function POST(request: Request) {
 
         const response = await fetchApi('/api/onboarding/publisher', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(registrationData)
         });
 
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Registration error response:', errorData);
+            throw new Error(errorData.detail || 'Registration failed');
+        }
+
         const data = await response.json();
+        console.log('Registration success:', data);
 
         const nextResponse = NextResponse.json(data);
 
