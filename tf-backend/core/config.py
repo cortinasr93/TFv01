@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     API_URL: str = BASE_URL
     
     # Frontend Application URL
-    FRONTEND_URL: Optional[str] = None
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:8000")
 
     # CORS Settings
     CORS_ORIGINS: list = [
