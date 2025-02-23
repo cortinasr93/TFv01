@@ -19,6 +19,7 @@ from api.onboarding import router as onboarding_router
 from api.contact import router as contact_router
 from api.auth import router as auth_router
 from api.token_metering import router as metering_router
+from fastapi.responses import JSONResponse
 #from api.payments import router as payments_router
 
 # Initialize settings
@@ -196,7 +197,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         detail=exc.detail,
         path=request.url.path
     )
-    return {"detail": exc.detail}
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}
+    )
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
@@ -206,7 +210,10 @@ async def general_exception_handler(request: Request, exc: Exception):
         path=request.url.path,
         exc_info=True
     )
-    return {"detail": "Internal server error"}
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
 
 if __name__ == "__main__":
     import uvicorn
