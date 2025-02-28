@@ -90,6 +90,8 @@ app.add_middleware(
         f"https://www.{settings.FRONTEND_URL.replace('https://', '')}",  # www subdomain
         "http://localhost:3000",  # Local development
         "http://127.0.0.1:3000",  # Alternative local development
+        "https://www.trainfair.io",
+        "https://trainfair.io",
     ] if settings.FRONTEND_URL else [
         "http://localhost:3000",  # Fallback for development
         "http://127.0.0.1:3000"
