@@ -9,13 +9,13 @@ import { Check } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import ScrollAnimation from '../../components/ScrollAnimation';
-// import StripeOnboarding from '@/app/components/StripeOnboarding';
+import StripeOnboarding from '@/app/components/StripeOnboarding';
 
 interface FormErrors {
   name?: string;
   email?: string;
-  // password?: string;
-  // confirmPassword?: string;
+  password?: string;
+  confirmPassword?: string;
   companyName?: string;
   website?: string;
   contentType?: string;
@@ -25,8 +25,8 @@ interface FormErrors {
 interface FormData {
   name: string;
   email: string;
-  // password: string;
-  // confirmPassword: string;
+  password: string;
+  confirmPassword: string;
   companyName: string;
   website: string;
   contentType: string;
@@ -48,20 +48,20 @@ export default function PublisherRegistration() {
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
-  // const [onboardingData, setOnboardingData] = useState<{
-  //   publisherId: string;
-  //   onboardingUrl: string;
-  //   loginCredentials: {
-  //     email: string;
-  //     password: string;
-  //   };
-  // } | null>(null);
+  const [onboardingData, setOnboardingData] = useState<{
+    publisherId: string;
+    onboardingUrl: string;
+    loginCredentials: {
+      email: string;
+      password: string;
+    };
+  } | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
-    // password: '',
-    // confirmPassword: '',
+    password: '',
+    confirmPassword: '',
     companyName: '',
     website: '',
     contentType: '',
@@ -104,15 +104,15 @@ export default function PublisherRegistration() {
         newErrors.email = 'Please provide valid email address';
     }
 
-    // if (!formData.password) {
-    //     newErrors.password = 'Password is required';
-    // } else if (formData.password.length < 8) {
-    //     newErrors.password = 'Password must be at least 8 characters';
-    // }
+    if (!formData.password) {
+        newErrors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+        newErrors.password = 'Password must be at least 8 characters';
+    }
 
-    // if (formData.password !== formData.confirmPassword) {
-    //     newErrors.confirmPassword = 'Passwords do not match';
-    // }
+    if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+    }
 
     if (!formData.companyName) newErrors.companyName = 'Company name is required';
     if (!formData.website) newErrors.website = 'Website is required';
@@ -158,17 +158,17 @@ export default function PublisherRegistration() {
         }
 
         setSubmitted(true);
-        // console.log('Setting onboarding data...');
-        // // Store onboarding data to trigger Stripe onboarding
-        // setOnboardingData({
-        //   publisherId: data.publisher_id,
-        //   onboardingUrl: data.onboarding_url,
-        //   loginCredentials: {
-        //     email: formData.email,
-        //     password: formData.password
-        //   }
-        // });
-        // console.log('Onboarding data set');
+        console.log('Setting onboarding data...');
+        // Store onboarding data to trigger Stripe onboarding
+        setOnboardingData({
+          publisherId: data.publisher_id,
+          onboardingUrl: data.onboarding_url,
+          loginCredentials: {
+            email: formData.email,
+            password: formData.password
+          }
+        });
+        console.log('Onboarding data set');
 
       } catch (error) {
         console.error('Registration error:', error);
@@ -180,23 +180,23 @@ export default function PublisherRegistration() {
 
   
     // If we have onboarding data, show the stripe onboarding component
-    // if (onboardingData) {
-    //   return (
-    //     <div className="min-h-screen bg-gradient-to-br from-[#b1c9a7] via-[#e9efe6] to-[#79a267]">
-    //       <Navbar />
-    //       <div className="py-12 px-4 sm:px-6 lg:px-8">
-    //         <div className="max-w-2xl mx-auto">
-    //           <StripeOnboarding
-    //             publisherId={onboardingData.publisherId}
-    //             onboardingUrl={onboardingData.onboardingUrl}
-    //             loginCredentials={onboardingData.loginCredentials}
-    //           />
-    //         </div>
-    //       </div>
-    //       <Footer />
-    //     </div>
-    //   );
-    // }
+    if (onboardingData) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-[#b1c9a7] via-[#e9efe6] to-[#79a267]">
+          <Navbar />
+          <div className="py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-2xl mx-auto">
+              <StripeOnboarding
+                publisherId={onboardingData.publisherId}
+                onboardingUrl={onboardingData.onboardingUrl}
+                loginCredentials={onboardingData.loginCredentials}
+              />
+            </div>
+          </div>
+          <Footer />
+        </div>
+      );
+    }
   
   if (submitted) {
     return(
@@ -279,7 +279,7 @@ export default function PublisherRegistration() {
                   </div>
                 </div>
 
-                {/* Password Fields
+                {/* Password Fields */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div>
                     <label className="block text-sm font-medium text-gray-700" htmlFor="password">
@@ -316,7 +316,7 @@ export default function PublisherRegistration() {
                       <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
                     )}
                   </div>
-                </div> */}
+                </div>
 
                 {/* Company Information */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -452,7 +452,7 @@ export default function PublisherRegistration() {
                     </div>
                   )}
 
-                  {/* <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                     <div className="flex">
                       <div className="flex-shrink-0">
                         <svg 
@@ -467,11 +467,11 @@ export default function PublisherRegistration() {
                           />
                         </svg>
                       </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-blue-800">After creating your account, you'll be redirected to Stripe to set up your payout information and verify your identity.</p>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-blue-800">After creating your account, you'll be redirected to Stripe to set up your payout information and verify your identity.</p>
+                      </div>
                     </div>
-                  </div>
-                </div> */}
+                  </div> 
 
                   {/* Submit Button */}
                   <button
@@ -487,28 +487,23 @@ export default function PublisherRegistration() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        {/* Setting up account... */}
                       </>
                     ) : (
-                      'Submit'
-                    )}
-                    </button>
-
-                      {/* <>
+                     <>
                         Create Account & Continue to Stripe
                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </>
                     )}
-                  </button> */}
-{/* 
+                  </button> 
+
                   <div className="text-center text-sm text-gray-600">
                     Already have an account?{' '}
                     <Link href="/login" className="text-[#4a653e] hover:text-[#79a267] transition-colors">
                       Sign in
                     </Link>
-                  </div> */}
+                  </div> 
                 </form>
               </div>
             </ScrollAnimation>

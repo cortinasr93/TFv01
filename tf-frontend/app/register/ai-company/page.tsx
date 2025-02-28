@@ -14,8 +14,8 @@ interface FormErrors {
   name?: string;
   companyName?: string;
   email?: string;
-  // password?: string;
-  // confirmPassword?: string;
+  password?: string;
+  confirmPassword?: string;
   useCase?: string;
   website?: string;
   submit?: string;
@@ -25,8 +25,8 @@ interface FormData {
   name: string;
   companyName: string;
   email: string;
-  // password: string;
-  // confirmPassword: string;
+  password: string;
+  confirmPassword: string;
   website: string;
   // billingEmail: string;
   useCases: string[];
@@ -44,8 +44,8 @@ export default function AICompanyRegistration() {
     name: '',
     companyName: '',
     email: '',
-    // password: '',
-    // confirmPassword: '',
+    password: '',
+    confirmPassword: '',
     website: '',
     useCases: [],
     message: '',
@@ -88,15 +88,15 @@ export default function AICompanyRegistration() {
       newErrors.email = 'Please provide a valid email address';
     }
     
-    // if (!formData.password) {
-    //   newErrors.password = 'Password is required';
-    // } else if (formData.password.length < 8) {
-    //   newErrors.password = 'Password must be at least 8 characters';
-    // }
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    }
 
-    // if (formData.password !== formData.confirmPassword) {
-    //   newErrors.confirmPassword = 'Passwords do not match';
-    // }
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
 
     if (!formData.website) newErrors.website = 'Website is required';
 

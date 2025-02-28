@@ -14,7 +14,7 @@ export async function POST(request: Request) {
             name: body.name,
             email: body.email,
             company_name: body.companyName,
-            // password: body.password,
+            password: body.password,
             website: body.website,
             content_type: body.contentType,
             message: body.message,
