@@ -237,36 +237,43 @@ class DashboardService:
     
     async def get_publisher_earnings(self, publisher_id: str) -> Dict:
         """ 
-        Get earnings data for a publisher
+        Get earnings data for a publisher (manual processing for MVP)
         """
         with LogOperation("get_publisher_earnings", publisher_id=publisher_id):
             try:
-                publisher_account = self.db.query(PublisherStripeAccount).filter(
-                    PublisherStripeAccount.publisher_id == publisher_id
-                ).first()
+                # publisher_account = self.db.query(PublisherStripeAccount).filter(
+                #     PublisherStripeAccount.publisher_id == publisher_id
+                # ).first()
+                               
+                # if not publisher_account:
+                #     logger.warning("no_stripe_account_found", publisher_id=publisher_id)
+                #     return {
+                #         "currentBalance": 0,
+                #         "lastPayout": None,
+                #         "totalEarned": 0
+                #     }
                 
-                if not publisher_account:
-                    logger.warning("no_stripe_account_found", publisher_id=publisher_id)
-                    return {
-                        "currentBalance": 0,
-                        "lastPayout": None,
-                        "totalEarned": 0
-                    }
+                # total_earned = self.db.query(func.sum(UsageRecord.publisher_amount)).filter(
+                #     UsageRecord.publisher_id == publisher_account.id,
+                #     UsageRecord.status == UsageStatus.PROCESSED
+                # ).scalar() or 0
                 
-                total_earned = self.db.query(func.sum(UsageRecord.publisher_amount)).filter(
-                    UsageRecord.publisher_id == publisher_account.id,
-                    UsageRecord.status == UsageStatus.PROCESSED
-                ).scalar() or 0
+                usage_records = self.db.query(UsageRecord).filter(
+                    UsageRecord.publisher_id == publisher_id
+                ).all()
+                
+                total_earned = sum(record.publisher_amount for record in usage_records) or 0
                 
                 logger.info("earnings_calculated",
                            publisher_id=publisher_id,
                            total_earned=total_earned,
-                           current_balance=publisher_account.current_balance,
-                           last_payout=publisher_account.last_payout_at)
+                           #current_balance=publisher_account.current_balance,
+                           #last_payout=publisher_account.last_payout_at
+                           )
                 
                 return {
-                    "currentBalance": publisher_account.current_balance,
-                    "lastPayout": publisher_account.last_payout_at,
+                    "currentBalance": total_earned,
+                    "lastPayout": None, #No payouts yet through the system
                     "totalEarned": total_earned
                 }
             

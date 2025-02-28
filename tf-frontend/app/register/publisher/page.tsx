@@ -9,7 +9,7 @@ import { Check } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import ScrollAnimation from '../../components/ScrollAnimation';
-import StripeOnboarding from '@/app/components/StripeOnboarding';
+// import StripeOnboarding from '@/app/components/StripeOnboarding';
 
 interface FormErrors {
   name?: string;
@@ -48,14 +48,14 @@ export default function PublisherRegistration() {
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
-  const [onboardingData, setOnboardingData] = useState<{
-    publisherId: string;
-    onboardingUrl: string;
-    loginCredentials: {
-      email: string;
-      password: string;
-    };
-  } | null>(null);
+  // const [onboardingData, setOnboardingData] = useState<{
+  //   publisherId: string;
+  //   onboardingUrl: string;
+  //   loginCredentials: {
+  //     email: string;
+  //     password: string;
+  //   };
+  // } | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -158,17 +158,37 @@ export default function PublisherRegistration() {
         }
 
         setSubmitted(true);
-        console.log('Setting onboarding data...');
-        // Store onboarding data to trigger Stripe onboarding
-        setOnboardingData({
-          publisherId: data.publisher_id,
-          onboardingUrl: data.onboarding_url,
-          loginCredentials: {
-            email: formData.email,
-            password: formData.password
+
+        try {
+          const loginResponse = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: formData.email,
+              password: formData.password,
+              userType: 'publisher'
+            })
+          });
+
+          if (loginResponse.ok) {
+            // Redirect to dashboard after successful login
+            window.location.href = `/dashboard/publisher/${data.publisher_id}`;
           }
-        });
-        console.log('Onboarding data set');
+        } catch (loginError) {
+          console.error('Auto-login failed:', loginError);
+        }
+
+        // console.log('Setting onboarding data...');
+        // // Store onboarding data to trigger Stripe onboarding
+        // setOnboardingData({
+        //   publisherId: data.publisher_id,
+        //   onboardingUrl: data.onboarding_url,
+        //   loginCredentials: {
+        //     email: formData.email,
+        //     password: formData.password
+        //   }
+        // });
+        // console.log('Onboarding data set');
 
       } catch (error) {
         console.error('Registration error:', error);
@@ -179,24 +199,24 @@ export default function PublisherRegistration() {
   };
 
   
-    // If we have onboarding data, show the stripe onboarding component
-    if (onboardingData) {
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-[#b1c9a7] via-[#e9efe6] to-[#79a267]">
-          <Navbar />
-          <div className="py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl mx-auto">
-              <StripeOnboarding
-                publisherId={onboardingData.publisherId}
-                onboardingUrl={onboardingData.onboardingUrl}
-                loginCredentials={onboardingData.loginCredentials}
-              />
-            </div>
-          </div>
-          <Footer />
-        </div>
-      );
-    }
+    // // If we have onboarding data, show the stripe onboarding component
+    // if (onboardingData) {
+    //   return (
+    //     <div className="min-h-screen bg-gradient-to-br from-[#b1c9a7] via-[#e9efe6] to-[#79a267]">
+    //       <Navbar />
+    //       <div className="py-12 px-4 sm:px-6 lg:px-8">
+    //         <div className="max-w-2xl mx-auto">
+    //           <StripeOnboarding
+    //             publisherId={onboardingData.publisherId}
+    //             onboardingUrl={onboardingData.onboardingUrl}
+    //             loginCredentials={onboardingData.loginCredentials}
+    //           />
+    //         </div>
+    //       </div>
+    //       <Footer />
+    //     </div>
+    //   );
+    // }
   
   if (submitted) {
     return(
@@ -452,6 +472,7 @@ export default function PublisherRegistration() {
                     </div>
                   )}
 
+                {/* STRIPE ONBOARDING FLOW
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                     <div className="flex">
                       <div className="flex-shrink-0">
@@ -472,6 +493,7 @@ export default function PublisherRegistration() {
                       </div>
                     </div>
                   </div> 
+                */}
 
                   {/* Submit Button */}
                   <button
@@ -490,7 +512,7 @@ export default function PublisherRegistration() {
                       </>
                     ) : (
                      <>
-                        Create Account & Continue to Stripe
+                        Create Account
                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
