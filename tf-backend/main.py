@@ -85,28 +85,10 @@ class PreflightMiddleware(BaseHTTPMiddleware):
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        settings.FRONTEND_URL,  # From your existing settings
-        f"https://www.{settings.FRONTEND_URL.replace('https://', '')}",  # www subdomain
-        "http://localhost:3000",  # Local development
-        "http://127.0.0.1:3000",  # Alternative local development
-        "https://www.trainfair.io",
-        "https://trainfair.io",
-    ] if settings.FRONTEND_URL else [
-        "http://localhost:3000",  # Fallback for development
-        "http://127.0.0.1:3000"
-    ],
+    allow_origins=["https://trainfair.io", "https://www.trainfair.io"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=[
-        "Content-Type",
-        "Authorization",
-        "Accept",
-        "Origin",
-        "X-Requested-With",
-        "X-CSRF-Token",
-        "Cookie"
-    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
     expose_headers=[
         "Set-Cookie",
         "Content-Type",
