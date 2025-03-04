@@ -17,7 +17,7 @@ class PublisherRegistration(BaseModel):
     name: str
     email: EmailStr
     company_name: str
-    # password: str
+    password: str
     website: HttpUrl
     content_type: str
     message: Optional[str] = None
@@ -27,7 +27,7 @@ class AICompanyRegistration(BaseModel):
     name: str
     company_name: str
     email: EmailStr
-    # password: str
+    password: str
     website: HttpUrl
     use_cases: List[str]
     message: Optional[str] = None
@@ -44,7 +44,7 @@ async def register_publisher(
             name=registration.name,
             email=registration.email,
             company_name=registration.company_name,
-            # password=registration.password,
+            password=registration.password,
             website=str(registration.website),
             content_type=registration.content_type,
             message=registration.message
@@ -72,7 +72,7 @@ async def register_ai_company(
             name=registration.name,
             company_name=registration.company_name,
             email=registration.email,
-            # password=registration.password,
+            password=registration.password,
             website=str(registration.website),
             use_cases=registration.use_cases,
             message=registration.message
