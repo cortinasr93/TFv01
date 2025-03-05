@@ -25,7 +25,7 @@ class Publisher(Base):
     website = Column(String)
     content_type = Column(String)
     message = Column(String)
-    # hashed_password = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=False)
     
     #Stripe info
     stripe_account_id = Column(String, unique=True)

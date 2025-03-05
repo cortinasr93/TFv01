@@ -24,7 +24,7 @@ class AICompany(Base):
     website = Column(String)
     use_cases = Column(ARRAY(String), nullable=False, default=[])
     message = Column(String)
-    # hashed_password = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=False)
     
     onboarding_status = Column(
         Enum(CompanyOnboardingStatus),
