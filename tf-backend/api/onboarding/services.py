@@ -31,7 +31,7 @@ class OnboardingService:
         password: str,
         website: str,
         content_type: str,
-        message: str = None
+        message: str = None,
     ) -> Dict:
         """ 
         Register a new publisher and initiate Stripe onboarding

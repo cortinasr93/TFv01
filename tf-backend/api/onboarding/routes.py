@@ -21,7 +21,7 @@ class PublisherRegistration(BaseModel):
     website: HttpUrl
     content_type: str
     message: Optional[str] = None
-    settings: Optional[Dict] = None
+    #settings: Optional[Dict] = None
 
 class AICompanyRegistration(BaseModel):
     name: str

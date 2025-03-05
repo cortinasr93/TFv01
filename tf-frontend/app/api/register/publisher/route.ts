@@ -19,10 +19,10 @@ export async function POST(request: Request) {
             content_type: body.contentType,
             message: body.message,
             onboarding_status: 'waitlist',
-            settings: {
-                description: body.description,
-                content_categories: body.contentCategories,
-            }
+            //settings: {
+            //    description: body.description,
+            //    content_categories: body.contentCategories,
+            //}
         };
 
         console.log('Sending to backend:', registrationData);
