@@ -31,18 +31,9 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
     if not auth_result:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Create a session for authenticated user
-    user_data = {
-        "id": str(auth_result["user"]["id"]),
-        "email": auth_result["user"]["email"],
-        "user_type": auth_result["user"]["user_type"]
-    }
-    
-    session_manager = SessionManager()
-    session_id = session_manager.create_session(user_data)
     
     return {
-        "session_id": session_id,
-        "user_id": user_data["id"]
+        "session_id": auth_result["session_id"],
+        "user_id": auth_result["user"]["id"]
         }
     

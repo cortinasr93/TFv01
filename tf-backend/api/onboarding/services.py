@@ -63,7 +63,7 @@ class OnboardingService:
                 )
                 
                 self.db.add(publisher)
-                self.db.flush()
+                self.db.commit()
                 
                 logger.info("publisher_record_created", 
                            publisher_id=str(publisher.id),
@@ -126,9 +126,10 @@ class OnboardingService:
                 #     self.db.add(publisher_stripe)
                 #     self.db.commit()
                     
-                #     logger.info("publisher_registration_complete",
-                #               publisher_id=str(publisher.id),
-                #               stripe_account_id=stripe_account.id)
+                logger.info("publisher_registration_complete",
+                    publisher_id=str(publisher.id),
+                    email=email)
+                #   stripe_account_id=stripe_account.id)
                     
                 return {
                     "publisher_id": str(publisher.id),

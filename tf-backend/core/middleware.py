@@ -15,25 +15,34 @@ async def get_session(request: Request) -> dict:
     """
     session_id = request.cookies.get("session_id")
     
+    logger.debug(f"Cookies in request: {request.cookies}")
+    logger.debug(f"Session ID from cookie: {session_id}")
+    
     if not session_id:
+        logger.warning("No session ID found in cookies")
         raise HTTPException(status_code=401, detail="No session found")
     
     session = session_manager.get_session(session_id)
     
     if not session:
+        logger.warning(f"Invalid or expired session ID: {session_id}")
         raise HTTPException(status_code=401, detail="Invalid or expired session")
     
+    logger.debug(f"Valid session found: {session}")
+
     return session
 
 async def require_publisher(session: dict = Depends(get_session)):
     """Verify the user is a publisher"""
     if session["user_type"] != "publisher":
+        logger.warning(f"Access denied - user is not a publisher: {session}")
         raise HTTPException(status_code=403, detail="Publisher access required")
     return session
 
 async def require_ai_company(session: dict = Depends(get_session)):
     """Verify the user is an AI company"""
     if session["user_type"] != "ai-company":
+        logger.warning(f"Access denied - user is not an AI company: {session}")
         raise HTTPException(status_code=403, detail="AI Company access required")
     return session
 
@@ -45,7 +54,14 @@ async def verify_session(request: Request):
     logger.info(f"Cookies received: {request.cookies}")
     
     # Skip session check for login/register endpoints
-    if request.url.path in ["/api/auth/login", "/api/onboarding/publisher", "/api/onboarding/ai-company"]:
+    public_paths = [
+        "/api/auth/login", 
+        "/api/onboarding/publisher", 
+        "/api/onboarding/ai-company",
+        "/health"
+    ]
+    
+    if any(request.url.path.startswith(path) for path in public_paths):
         return
     
     session_id = request.cookies.get("session_id")
